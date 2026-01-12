@@ -145,7 +145,916 @@
     </div>
 
     <script>
-const DATA = [,,];
+const DATA = [
+Loading trace from "./profiles/compare_20260112_182718/baseline.jsonl"...
+Loaded 58521 page fault events, 250494 cursor events, 2641 txn events (0 parse errors)
+MDBX file: 161480704 pages (616.00 GB), page size: 4096
+Got table stats from mdbx_stat (32 tables):
+  @main: 1 pages (0 branch, 1 leaf, 0 overflow), 31 entries, depth 1
+  AccountChangeSets: 2446021 pages (486558 branch, 1959463 leaf, 0 overflow), 162066954 entries, depth 3
+  AccountsHistory: 46887 pages (760 branch, 45802 leaf, 325 overflow), 1325116 entries, depth 4
+  AccountsTrie: 1493076 pages (9085 branch, 1483991 leaf, 0 overflow), 26395009 entries, depth 4
+  AccountsTrieChangeSets: 4831128 pages (704586 branch, 4126542 leaf, 0 overflow), 30462521 entries, depth 3
+  BlockBodyIndices: 144150 pages (642 branch, 143508 leaf, 0 overflow), 24220425 entries, depth 4
+  BlockOmmers: 189519 pages (844 branch, 188675 leaf, 0 overflow), 1209744 entries, depth 4
+  BlockWithdrawals: 1031076 pages (4585 branch, 1026491 leaf, 0 overflow), 7185485 entries, depth 4
+  Bytecodes: 4215888 pages (3320 branch, 216674 leaf, 3995894 overflow), 2066147 entries, depth 4
+  CanonicalHeaders: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  ChainState: 1 pages (0 branch, 1 leaf, 0 overflow), 2 entries, depth 1
+  HashedAccounts: 7569459 pages (98445 branch, 7471014 leaf, 0 overflow), 346310039 entries, depth 5
+  HashedStorages: 24414791 pages (764574 branch, 23650217 leaf, 0 overflow), 1471853017 entries, depth 5
+  HeaderNumbers: 426891 pages (6287 branch, 420604 leaf, 0 overflow), 24220425 entries, depth 4
+  HeaderTerminalDifficulties: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  Headers: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  Metadata: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  PlainAccountState: 5391848 pages (58820 branch, 5333028 leaf, 0 overflow), 346310039 entries, depth 5
+  PlainStorageState: 31869163 pages (946245 branch, 30922918 leaf, 0 overflow), 1471853017 entries, depth 5
+  PruneCheckpoints: 1 pages (0 branch, 1 leaf, 0 overflow), 7 entries, depth 1
+  Receipts: 126655 pages (501 branch, 111531 leaf, 14623 overflow), 2913651 entries, depth 4
+  StageCheckpointProgresses: 1 pages (0 branch, 1 leaf, 0 overflow), 1 entries, depth 1
+  StageCheckpoints: 1 pages (0 branch, 1 leaf, 0 overflow), 16 entries, depth 1
+  StorageChangeSets: 6875247 pages (591472 branch, 6283775 leaf, 0 overflow), 368365206 entries, depth 5
+  StoragesHistory: 222033 pages (7190 branch, 214088 leaf, 755 overflow), 3059534 entries, depth 5
+  StoragesTrie: 8292292 pages (802213 branch, 7490079 leaf, 0 overflow), 130371985 entries, depth 4
+  StoragesTrieChangeSets: 4216351 pages (714958 branch, 3501393 leaf, 0 overflow), 25537157 entries, depth 4
+  TransactionBlocks: 145395 pages (648 branch, 144747 leaf, 0 overflow), 22580390 entries, depth 4
+  TransactionHashNumbers: 56800151 pages (830815 branch, 55969336 leaf, 0 overflow), 3186861901 entries, depth 6
+  TransactionSenders: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  Transactions: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  VersionHistory: 1 pages (0 branch, 1 leaf, 0 overflow), 6 entries, depth 1
+Total table pages: 160748027 (99.5% of file)
+Loaded MDBX metadata from "../../reth_data/db/mdbx.dat"
+{
+  "attribution": {
+    "directly_attributed": 57983,
+    "timestamp_fallback": 0,
+    "uncorrelated": 538
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 65.24109199652779,
+        "name": "HashedStorages",
+        "ops": 115200,
+        "p95_latency_us": 92.903,
+        "pct": 45.98912548803564
+      },
+      {
+        "avg_latency_us": 77.06699466126422,
+        "name": "HashedAccounts",
+        "ops": 78483,
+        "p95_latency_us": 110.587,
+        "pct": 31.331289372200533
+      },
+      {
+        "avg_latency_us": 117.74508722218253,
+        "name": "AccountsTrie",
+        "ops": 27986,
+        "p95_latency_us": 164.408,
+        "pct": 11.172323488786159
+      },
+      {
+        "avg_latency_us": 254.43662363926214,
+        "name": "StoragesTrie",
+        "ops": 21955,
+        "p95_latency_us": 1196.107,
+        "pct": 8.764680990363043
+      },
+      {
+        "avg_latency_us": 491.4295731481481,
+        "name": "PlainAccountState",
+        "ops": 2160,
+        "p95_latency_us": 3062.408,
+        "pct": 0.8622961029006683
+      },
+      {
+        "avg_latency_us": 1081.4214216182047,
+        "name": "PlainStorageState",
+        "ops": 1582,
+        "p95_latency_us": 5185.958,
+        "pct": 0.6315520531429895
+      },
+      {
+        "avg_latency_us": 7.279131001371742,
+        "name": "HeaderNumbers",
+        "ops": 1458,
+        "p95_latency_us": 12.693,
+        "pct": 0.582049869457951
+      },
+      {
+        "avg_latency_us": 3.0353220221606647,
+        "name": "StageCheckpoints",
+        "ops": 1444,
+        "p95_latency_us": 4.068,
+        "pct": 0.5764609132354467
+      },
+      {
+        "avg_latency_us": 2.671826388888889,
+        "name": "PruneCheckpoints",
+        "ops": 144,
+        "p95_latency_us": 3.416,
+        "pct": 0.05748640686004455
+      },
+      {
+        "avg_latency_us": 464.18463414634147,
+        "name": "Bytecodes",
+        "ops": 82,
+        "p95_latency_us": 2576.478,
+        "pct": 0.03273531501752537
+      }
+    ],
+    "latency_avg_us": 100.88598230296934,
+    "latency_p95_us": 189.744,
+    "latency_p99_us": 3117.49,
+    "rate_per_sec": 9280.287352153973,
+    "seek_ratio": 81.8103427627009,
+    "total": 250494
+  },
+  "label": "baseline",
+  "page_faults": {
+    "major": 29067,
+    "major_ratio": 0.4966934946429487,
+    "minor": 29454,
+    "random_ratio": 0.9321257689678742,
+    "rate_per_sec": 1910.5619698111118,
+    "sequential_ratio": 0.06787423103212577,
+    "total": 58521,
+    "unique_pages": 29191
+  },
+  "tables": [
+    {
+      "fault_pct": 29.510773910220262,
+      "faults": 17270,
+      "major_faults": 8569,
+      "name": "HashedStorages",
+      "slow_ops": 5263,
+      "time_lost_ms": 7006.524707,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 23.82050887715521,
+      "faults": 13940,
+      "major_faults": 6955,
+      "name": "HashedAccounts",
+      "slow_ops": 4240,
+      "time_lost_ms": 5722.706766,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 21.764836554399274,
+      "faults": 12737,
+      "major_faults": 6307,
+      "name": "StoragesTrie",
+      "slow_ops": 3275,
+      "time_lost_ms": 5427.141425,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 9.012149484800327,
+      "faults": 5274,
+      "major_faults": 2630,
+      "name": "AccountsTrie",
+      "slow_ops": 1819,
+      "time_lost_ms": 3117.821775,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 6.893251995010338,
+      "faults": 4034,
+      "major_faults": 1994,
+      "name": "PlainStorageState",
+      "slow_ops": 1008,
+      "time_lost_ms": 1703.07039,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 7.631448539840399,
+      "faults": 4466,
+      "major_faults": 2212,
+      "name": "PlainAccountState",
+      "slow_ops": 1193,
+      "time_lost_ms": 1050.826908,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.423779497957998,
+      "faults": 248,
+      "major_faults": 124,
+      "name": "Bytecodes",
+      "slow_ops": 41,
+      "time_lost_ms": 37.724782,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.023923036175048273,
+      "faults": 14,
+      "major_faults": 7,
+      "name": "HeaderNumbers",
+      "slow_ops": 3,
+      "time_lost_ms": 0.794156,
+      "top_op": "DIRECT_GET"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 2413,
+      "percentage": 4.123306163599392,
+      "tid": 87066
+    },
+    {
+      "faults": 1283,
+      "percentage": 2.192375386613352,
+      "tid": 145581
+    },
+    {
+      "faults": 1181,
+      "percentage": 2.0180789801951438,
+      "tid": 145539
+    },
+    {
+      "faults": 1130,
+      "percentage": 1.930930776986039,
+      "tid": 145564
+    },
+    {
+      "faults": 1096,
+      "percentage": 1.8728319748466362,
+      "tid": 145598
+    },
+    {
+      "faults": 1030,
+      "percentage": 1.7600519471642657,
+      "tid": 145574
+    },
+    {
+      "faults": 994,
+      "percentage": 1.6985355684284276,
+      "tid": 145566
+    },
+    {
+      "faults": 895,
+      "percentage": 1.5293655269048716,
+      "tid": 145567
+    },
+    {
+      "faults": 862,
+      "percentage": 1.4729755130636866,
+      "tid": 145534
+    },
+    {
+      "faults": 854,
+      "percentage": 1.4593052066779446,
+      "tid": 145573
+    }
+  ],
+  "trace": {
+    "block_range": null,
+    "duration_secs": 30.630254828,
+    "file_size_gb": 658.333499408,
+    "total_events": 58521
+  },
+  "transactions": {
+    "aborts": 1257,
+    "commit_latency_avg_us": 0.0,
+    "commit_latency_p99_us": 0.0,
+    "commits": 0,
+    "max_concurrent_ro": 128,
+    "max_concurrent_rw": 0,
+    "rate_per_sec": 58.74539999976334,
+    "ro_count": 1384,
+    "rw_count": 0,
+    "total": 1384
+  }
+}
+,
+Loading trace from "./profiles/compare_20260112_182718/rpc_stress.jsonl"...
+Loaded 56869 page fault events, 148673 cursor events, 2674 txn events (0 parse errors)
+MDBX file: 161480704 pages (616.00 GB), page size: 4096
+Got table stats from mdbx_stat (32 tables):
+  @main: 1 pages (0 branch, 1 leaf, 0 overflow), 31 entries, depth 1
+  AccountChangeSets: 2446021 pages (486558 branch, 1959463 leaf, 0 overflow), 162066954 entries, depth 3
+  AccountsHistory: 46887 pages (760 branch, 45802 leaf, 325 overflow), 1325116 entries, depth 4
+  AccountsTrie: 1493076 pages (9085 branch, 1483991 leaf, 0 overflow), 26395009 entries, depth 4
+  AccountsTrieChangeSets: 4831128 pages (704586 branch, 4126542 leaf, 0 overflow), 30462521 entries, depth 3
+  BlockBodyIndices: 144150 pages (642 branch, 143508 leaf, 0 overflow), 24220425 entries, depth 4
+  BlockOmmers: 189519 pages (844 branch, 188675 leaf, 0 overflow), 1209744 entries, depth 4
+  BlockWithdrawals: 1031076 pages (4585 branch, 1026491 leaf, 0 overflow), 7185485 entries, depth 4
+  Bytecodes: 4215888 pages (3320 branch, 216674 leaf, 3995894 overflow), 2066147 entries, depth 4
+  CanonicalHeaders: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  ChainState: 1 pages (0 branch, 1 leaf, 0 overflow), 2 entries, depth 1
+  HashedAccounts: 7569459 pages (98445 branch, 7471014 leaf, 0 overflow), 346310039 entries, depth 5
+  HashedStorages: 24414791 pages (764574 branch, 23650217 leaf, 0 overflow), 1471853017 entries, depth 5
+  HeaderNumbers: 426891 pages (6287 branch, 420604 leaf, 0 overflow), 24220425 entries, depth 4
+  HeaderTerminalDifficulties: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  Headers: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  Metadata: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  PlainAccountState: 5391848 pages (58820 branch, 5333028 leaf, 0 overflow), 346310039 entries, depth 5
+  PlainStorageState: 31869163 pages (946245 branch, 30922918 leaf, 0 overflow), 1471853017 entries, depth 5
+  PruneCheckpoints: 1 pages (0 branch, 1 leaf, 0 overflow), 7 entries, depth 1
+  Receipts: 126655 pages (501 branch, 111531 leaf, 14623 overflow), 2913651 entries, depth 4
+  StageCheckpointProgresses: 1 pages (0 branch, 1 leaf, 0 overflow), 1 entries, depth 1
+  StageCheckpoints: 1 pages (0 branch, 1 leaf, 0 overflow), 16 entries, depth 1
+  StorageChangeSets: 6875247 pages (591472 branch, 6283775 leaf, 0 overflow), 368365206 entries, depth 5
+  StoragesHistory: 222033 pages (7190 branch, 214088 leaf, 755 overflow), 3059534 entries, depth 5
+  StoragesTrie: 8292292 pages (802213 branch, 7490079 leaf, 0 overflow), 130371985 entries, depth 4
+  StoragesTrieChangeSets: 4216351 pages (714958 branch, 3501393 leaf, 0 overflow), 25537157 entries, depth 4
+  TransactionBlocks: 145395 pages (648 branch, 144747 leaf, 0 overflow), 22580390 entries, depth 4
+  TransactionHashNumbers: 56800151 pages (830815 branch, 55969336 leaf, 0 overflow), 3186861901 entries, depth 6
+  TransactionSenders: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  Transactions: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  VersionHistory: 1 pages (0 branch, 1 leaf, 0 overflow), 6 entries, depth 1
+Total table pages: 160748027 (99.5% of file)
+Loaded MDBX metadata from "../../reth_data/db/mdbx.dat"
+{
+  "attribution": {
+    "directly_attributed": 44790,
+    "timestamp_fallback": 0,
+    "uncorrelated": 12079
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 72.84124299817185,
+        "name": "HashedStorages",
+        "ops": 68375,
+        "p95_latency_us": 106.73,
+        "pct": 45.99019324288876
+      },
+      {
+        "avg_latency_us": 92.79003462030394,
+        "name": "HashedAccounts",
+        "ops": 46129,
+        "p95_latency_us": 179.375,
+        "pct": 31.027153551754523
+      },
+      {
+        "avg_latency_us": 172.10281828011702,
+        "name": "AccountsTrie",
+        "ops": 15722,
+        "p95_latency_us": 439.181,
+        "pct": 10.574885823249684
+      },
+      {
+        "avg_latency_us": 320.0880666257763,
+        "name": "StoragesTrie",
+        "ops": 13043,
+        "p95_latency_us": 1910.854,
+        "pct": 8.772944650340007
+      },
+      {
+        "avg_latency_us": 250.50273558282208,
+        "name": "PlainAccountState",
+        "ops": 1630,
+        "p95_latency_us": 1022.021,
+        "pct": 1.0963658498853188
+      },
+      {
+        "avg_latency_us": 30.278462109955424,
+        "name": "HeaderNumbers",
+        "ops": 1346,
+        "p95_latency_us": 10.319,
+        "pct": 0.905342597512662
+      },
+      {
+        "avg_latency_us": 3.0469977238239756,
+        "name": "StageCheckpoints",
+        "ops": 1318,
+        "p95_latency_us": 4.057,
+        "pct": 0.886509319109724
+      },
+      {
+        "avg_latency_us": 1006.378819047619,
+        "name": "PlainStorageState",
+        "ops": 945,
+        "p95_latency_us": 4095.499,
+        "pct": 0.6356231460991572
+      },
+      {
+        "avg_latency_us": 2.7966979166666666,
+        "name": "PruneCheckpoints",
+        "ops": 96,
+        "p95_latency_us": 3.958,
+        "pct": 0.06457124023864455
+      },
+      {
+        "avg_latency_us": 480.4688333333333,
+        "name": "Bytecodes",
+        "ops": 36,
+        "p95_latency_us": 3100.588,
+        "pct": 0.024214215089491703
+      },
+      {
+        "avg_latency_us": 17.59464705882353,
+        "name": "BlockBodyIndices",
+        "ops": 17,
+        "p95_latency_us": 195.356,
+        "pct": 0.011434490458926638
+      },
+      {
+        "avg_latency_us": 599.85175,
+        "name": "BlockWithdrawals",
+        "ops": 16,
+        "p95_latency_us": 6872.562,
+        "pct": 0.010761873373107425
+      }
+    ],
+    "latency_avg_us": 118.19981404155429,
+    "latency_p95_us": 279.623,
+    "latency_p99_us": 3356.818,
+    "rate_per_sec": 5407.96309178945,
+    "seek_ratio": 81.96982639753016,
+    "total": 148673
+  },
+  "label": "rpc_stress",
+  "page_faults": {
+    "major": 24470,
+    "major_ratio": 0.4302871511719918,
+    "minor": 32399,
+    "random_ratio": 0.8959168600970668,
+    "rate_per_sec": 1823.3072549342162,
+    "sequential_ratio": 0.10408313990293311,
+    "total": 56869,
+    "unique_pages": 32297
+  },
+  "tables": [
+    {
+      "fault_pct": 21.106402433663334,
+      "faults": 12003,
+      "major_faults": 5946,
+      "name": "HashedStorages",
+      "slow_ops": 3661,
+      "time_lost_ms": 4675.625141,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 15.873322899998241,
+      "faults": 9027,
+      "major_faults": 4494,
+      "name": "HashedAccounts",
+      "slow_ops": 2799,
+      "time_lost_ms": 4093.793448,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 19.121138054124394,
+      "faults": 10874,
+      "major_faults": 5386,
+      "name": "StoragesTrie",
+      "slow_ops": 2759,
+      "time_lost_ms": 4081.155522,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 7.05305175051434,
+      "faults": 4011,
+      "major_faults": 1994,
+      "name": "AccountsTrie",
+      "slow_ops": 1415,
+      "time_lost_ms": 2602.655497,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 4.540259192178516,
+      "faults": 2582,
+      "major_faults": 1275,
+      "name": "PlainStorageState",
+      "slow_ops": 626,
+      "time_lost_ms": 947.417407,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 5.477500923174313,
+      "faults": 3115,
+      "major_faults": 1545,
+      "name": "PlainAccountState",
+      "slow_ops": 781,
+      "time_lost_ms": 400.108448,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.1512247445884401,
+      "faults": 86,
+      "major_faults": 43,
+      "name": "HeaderNumbers",
+      "slow_ops": 19,
+      "time_lost_ms": 32.473826,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.21804498056937874,
+      "faults": 124,
+      "major_faults": 62,
+      "name": "Bytecodes",
+      "slow_ops": 24,
+      "time_lost_ms": 17.227735,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.017584272626562803,
+      "faults": 10,
+      "major_faults": 5,
+      "name": "BlockWithdrawals",
+      "slow_ops": 3,
+      "time_lost_ms": 9.538277,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.00703370905062512,
+      "faults": 4,
+      "major_faults": 2,
+      "name": "BlockBodyIndices",
+      "slow_ops": 1,
+      "time_lost_ms": 0.195356,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 4.754787318222582,
+      "faults": 2704,
+      "major_faults": 557,
+      "name": "StoragesHistory",
+      "slow_ops": 0,
+      "time_lost_ms": 0.0,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.43960681566407006,
+      "faults": 250,
+      "major_faults": 122,
+      "name": "Receipts",
+      "slow_ops": 0,
+      "time_lost_ms": 0.0,
+      "top_op": "CURSOR_GET"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 14802,
+      "percentage": 26.02824034183826,
+      "tid": 87069
+    },
+    {
+      "faults": 1868,
+      "percentage": 3.284742126641931,
+      "tid": 87066
+    },
+    {
+      "faults": 1368,
+      "percentage": 2.405528495313791,
+      "tid": 145665
+    },
+    {
+      "faults": 1035,
+      "percentage": 1.81997221684925,
+      "tid": 145688
+    },
+    {
+      "faults": 979,
+      "percentage": 1.721500290140498,
+      "tid": 145691
+    },
+    {
+      "faults": 937,
+      "percentage": 1.6476463451089347,
+      "tid": 145667
+    },
+    {
+      "faults": 936,
+      "percentage": 1.6458879178462782,
+      "tid": 145694
+    },
+    {
+      "faults": 933,
+      "percentage": 1.6406126360583095,
+      "tid": 146249
+    },
+    {
+      "faults": 913,
+      "percentage": 1.605444090805184,
+      "tid": 145684
+    },
+    {
+      "faults": 875,
+      "percentage": 1.5386238548242452,
+      "tid": 145681
+    }
+  ],
+  "trace": {
+    "block_range": null,
+    "duration_secs": 31.190025623,
+    "file_size_gb": 658.500874256,
+    "total_events": 56869
+  },
+  "transactions": {
+    "aborts": 1269,
+    "commit_latency_avg_us": 0.0,
+    "commit_latency_p99_us": 0.0,
+    "commits": 0,
+    "max_concurrent_ro": 201,
+    "max_concurrent_rw": 0,
+    "rate_per_sec": 57.70571283602791,
+    "ro_count": 1405,
+    "rw_count": 0,
+    "total": 1405
+  }
+}
+,
+Loading trace from "./profiles/compare_20260112_182718/metrics_stress.jsonl"...
+Loaded 119616 page fault events, 348422 cursor events, 2435 txn events (0 parse errors)
+MDBX file: 161480704 pages (616.00 GB), page size: 4096
+Got table stats from mdbx_stat (32 tables):
+  @main: 1 pages (0 branch, 1 leaf, 0 overflow), 31 entries, depth 1
+  AccountChangeSets: 2446047 pages (486561 branch, 1959486 leaf, 0 overflow), 162069086 entries, depth 3
+  AccountsHistory: 46887 pages (760 branch, 45802 leaf, 325 overflow), 1325558 entries, depth 4
+  AccountsTrie: 1493104 pages (9085 branch, 1484019 leaf, 0 overflow), 26395027 entries, depth 4
+  AccountsTrieChangeSets: 4833158 pages (704883 branch, 4128275 leaf, 0 overflow), 30475373 entries, depth 3
+  BlockBodyIndices: 144151 pages (642 branch, 143509 leaf, 0 overflow), 24220428 entries, depth 4
+  BlockOmmers: 189519 pages (844 branch, 188675 leaf, 0 overflow), 1209744 entries, depth 4
+  BlockWithdrawals: 1031076 pages (4585 branch, 1026491 leaf, 0 overflow), 7185488 entries, depth 4
+  Bytecodes: 4215888 pages (3320 branch, 216674 leaf, 3995894 overflow), 2066147 entries, depth 4
+  CanonicalHeaders: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  ChainState: 1 pages (0 branch, 1 leaf, 0 overflow), 2 entries, depth 1
+  HashedAccounts: 7569560 pages (98445 branch, 7471115 leaf, 0 overflow), 346310295 entries, depth 5
+  HashedStorages: 24414846 pages (764577 branch, 23650269 leaf, 0 overflow), 1471853464 entries, depth 5
+  HeaderNumbers: 426893 pages (6287 branch, 420606 leaf, 0 overflow), 24220428 entries, depth 4
+  HeaderTerminalDifficulties: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  Headers: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  Metadata: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  PlainAccountState: 5391850 pages (58820 branch, 5333030 leaf, 0 overflow), 346310295 entries, depth 5
+  PlainStorageState: 31869175 pages (946245 branch, 30922930 leaf, 0 overflow), 1471853464 entries, depth 5
+  PruneCheckpoints: 1 pages (0 branch, 1 leaf, 0 overflow), 7 entries, depth 1
+  Receipts: 126713 pages (502 branch, 111587 leaf, 14624 overflow), 2915076 entries, depth 4
+  StageCheckpointProgresses: 1 pages (0 branch, 1 leaf, 0 overflow), 1 entries, depth 1
+  StageCheckpoints: 1 pages (0 branch, 1 leaf, 0 overflow), 16 entries, depth 1
+  StorageChangeSets: 6875314 pages (591480 branch, 6283834 leaf, 0 overflow), 368368662 entries, depth 5
+  StoragesHistory: 222038 pages (7190 branch, 214093 leaf, 755 overflow), 3060452 entries, depth 5
+  StoragesTrie: 8292305 pages (802217 branch, 7490088 leaf, 0 overflow), 130372010 entries, depth 4
+  StoragesTrieChangeSets: 4217987 pages (715229 branch, 3502758 leaf, 0 overflow), 25547255 entries, depth 4
+  TransactionBlocks: 145395 pages (648 branch, 144747 leaf, 0 overflow), 22580393 entries, depth 4
+  TransactionHashNumbers: 56800976 pages (830815 branch, 55970161 leaf, 0 overflow), 3186863326 entries, depth 6
+  TransactionSenders: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  Transactions: 0 pages (0 branch, 0 leaf, 0 overflow), 0 entries, depth 0
+  VersionHistory: 1 pages (0 branch, 1 leaf, 0 overflow), 6 entries, depth 1
+Total table pages: 160752888 (99.5% of file)
+Loaded MDBX metadata from "../../reth_data/db/mdbx.dat"
+{
+  "attribution": {
+    "directly_attributed": 119083,
+    "timestamp_fallback": 0,
+    "uncorrelated": 533
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 86.50570353537955,
+        "name": "HashedStorages",
+        "ops": 155344,
+        "p95_latency_us": 188.713,
+        "pct": 44.58501472352492
+      },
+      {
+        "avg_latency_us": 108.39153165784514,
+        "name": "HashedAccounts",
+        "ops": 110336,
+        "p95_latency_us": 275.646,
+        "pct": 31.66734591960324
+      },
+      {
+        "avg_latency_us": 212.95007517214995,
+        "name": "AccountsTrie",
+        "ops": 36596,
+        "p95_latency_us": 818.952,
+        "pct": 10.50335512682896
+      },
+      {
+        "avg_latency_us": 394.2036350840403,
+        "name": "StoragesTrie",
+        "ops": 31473,
+        "p95_latency_us": 2466.793,
+        "pct": 9.033011692717452
+      },
+      {
+        "avg_latency_us": 2.7487958662924217,
+        "name": "FREE_DBI (internal)",
+        "ops": 7838,
+        "p95_latency_us": 3.126,
+        "pct": 2.249570922616827
+      },
+      {
+        "avg_latency_us": 1544.7147532343074,
+        "name": "PlainStorageState",
+        "ops": 2087,
+        "p95_latency_us": 6397.864,
+        "pct": 0.5989862867442355
+      },
+      {
+        "avg_latency_us": 687.523979743083,
+        "name": "PlainAccountState",
+        "ops": 2024,
+        "p95_latency_us": 3744.102,
+        "pct": 0.5809047649115153
+      },
+      {
+        "avg_latency_us": 12.781166666666666,
+        "name": "HeaderNumbers",
+        "ops": 1248,
+        "p95_latency_us": 10.52,
+        "pct": 0.3581863372576933
+      },
+      {
+        "avg_latency_us": 3.0556715328467154,
+        "name": "StageCheckpoints",
+        "ops": 1233,
+        "p95_latency_us": 4.108,
+        "pct": 0.3538812130118075
+      },
+      {
+        "avg_latency_us": 3.4957083333333334,
+        "name": "PruneCheckpoints",
+        "ops": 144,
+        "p95_latency_us": 3.716,
+        "pct": 0.04132919276050307
+      },
+      {
+        "avg_latency_us": 843.0482424242424,
+        "name": "Bytecodes",
+        "ops": 99,
+        "p95_latency_us": 5108.844,
+        "pct": 0.028413820022845863
+      }
+    ],
+    "latency_avg_us": 144.47457103455005,
+    "latency_p95_us": 463.176,
+    "latency_p99_us": 3884.144,
+    "rate_per_sec": 11022.508051444078,
+    "seek_ratio": 79.71884668591535,
+    "total": 348422
+  },
+  "label": "metrics_stress",
+  "page_faults": {
+    "major": 59006,
+    "major_ratio": 0.49329521134296417,
+    "minor": 60610,
+    "random_ratio": 0.9660410483634996,
+    "rate_per_sec": 3625.9508406087434,
+    "sequential_ratio": 0.03395895163650044,
+    "total": 119616,
+    "unique_pages": 60281
+  },
+  "tables": [
+    {
+      "fault_pct": 28.426799090422687,
+      "faults": 34003,
+      "major_faults": 16788,
+      "name": "HashedStorages",
+      "slow_ops": 10289,
+      "time_lost_ms": 12739.034605,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 25.810928303905833,
+      "faults": 30874,
+      "major_faults": 15186,
+      "name": "StoragesTrie",
+      "slow_ops": 7768,
+      "time_lost_ms": 12188.262247,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 23.811195826645264,
+      "faults": 28482,
+      "major_faults": 14084,
+      "name": "HashedAccounts",
+      "slow_ops": 8626,
+      "time_lost_ms": 11498.94586,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 10.823802835741038,
+      "faults": 12947,
+      "major_faults": 6392,
+      "name": "AccountsTrie",
+      "slow_ops": 4408,
+      "time_lost_ms": 7544.358179,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 6.0535379882289995,
+      "faults": 7241,
+      "major_faults": 3576,
+      "name": "PlainStorageState",
+      "slow_ops": 1614,
+      "time_lost_ms": 3217.289855,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 4.358948635634029,
+      "faults": 5214,
+      "major_faults": 2559,
+      "name": "PlainAccountState",
+      "slow_ops": 1244,
+      "time_lost_ms": 1384.480496,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.2407704654895666,
+      "faults": 288,
+      "major_faults": 141,
+      "name": "Bytecodes",
+      "slow_ops": 48,
+      "time_lost_ms": 83.084067,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.026752273943285176,
+      "faults": 32,
+      "major_faults": 15,
+      "name": "HeaderNumbers",
+      "slow_ops": 6,
+      "time_lost_ms": 8.071774,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.0016720171214553235,
+      "faults": 2,
+      "major_faults": 1,
+      "name": "PruneCheckpoints",
+      "slow_ops": 1,
+      "time_lost_ms": 0.117589,
+      "top_op": "DIRECT_GET"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 2310,
+      "percentage": 1.9311797752808988,
+      "tid": 148595
+    },
+    {
+      "faults": 2211,
+      "percentage": 1.8484149277688604,
+      "tid": 148604
+    },
+    {
+      "faults": 2164,
+      "percentage": 1.8091225254146601,
+      "tid": 148600
+    },
+    {
+      "faults": 2125,
+      "percentage": 1.7765181915462815,
+      "tid": 148588
+    },
+    {
+      "faults": 2083,
+      "percentage": 1.7414058319957195,
+      "tid": 148606
+    },
+    {
+      "faults": 2079,
+      "percentage": 1.738061797752809,
+      "tid": 148615
+    },
+    {
+      "faults": 1934,
+      "percentage": 1.6168405564472978,
+      "tid": 148597
+    },
+    {
+      "faults": 1931,
+      "percentage": 1.614332530765115,
+      "tid": 148591
+    },
+    {
+      "faults": 1926,
+      "percentage": 1.6101524879614768,
+      "tid": 148611
+    },
+    {
+      "faults": 1926,
+      "percentage": 1.6101524879614768,
+      "tid": 148570
+    }
+  ],
+  "trace": {
+    "block_range": null,
+    "duration_secs": 32.988864234,
+    "file_size_gb": 658.33121384,
+    "total_events": 119616
+  },
+  "transactions": {
+    "aborts": 1133,
+    "commit_latency_avg_us": 0.0,
+    "commit_latency_p99_us": 0.0,
+    "commits": 0,
+    "max_concurrent_ro": 187,
+    "max_concurrent_rw": 0,
+    "rate_per_sec": 52.810374338221436,
+    "ro_count": 1302,
+    "rw_count": 0,
+    "total": 1302
+  }
+}
+];
 
         const fmt = n => {
             if (n === null || n === undefined) return '-';
@@ -179,12 +1088,15 @@ const DATA = [,,];
             return '';
         }
 
-        function getCardClass(label) {
-            return label.replace('_stress', '_stress');
-        }
+        // Check if data loaded
+        if (!DATA || !Array.isArray(DATA) || DATA.length === 0) {
+            document.getElementById('comparison-content').innerHTML =
+                '<p style="color: #f87171; margin-bottom: 16px;">No profile data found. Check that the traces were captured and analyzed correctly.</p>' +
+                '<p style="color: #71717a;">Make sure the .json files were generated in the session directory.</p>';
+        } else {
 
         // Find baseline for delta calculations
-        const baseline = DATA.find(d => d.label === 'baseline');
+        const baseline = DATA.find(d => d && d.label === 'baseline');
 
         // Generate comparison cards
         let html = '<div class="comparison-grid">';
@@ -296,6 +1208,7 @@ const DATA = [,,];
         }
 
         document.getElementById('comparison-content').innerHTML = html;
+        } // end else (data exists)
     </script>
 </body>
 </html>
