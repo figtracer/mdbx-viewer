@@ -1,0 +1,4683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPC Method MDBX Comparison</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #e4e4e7;
+            padding: 24px;
+            line-height: 1.5;
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        h1 { color: #3b82f6; margin-bottom: 8px; }
+        .subtitle { color: #71717a; margin-bottom: 24px; }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .method-card {
+            background: #12121a;
+            border-radius: 8px;
+            border: 1px solid #1e1e2a;
+            padding: 16px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .method-card:hover { border-color: #3b82f6; }
+        .method-card.worst { border-left: 3px solid #f87171; }
+        .method-card.best { border-left: 3px solid #22c55e; }
+
+        .method-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #3b82f6;
+            margin-bottom: 8px;
+            font-family: monospace;
+        }
+
+        .method-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .stat {
+            background: #0a0a0f;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .stat-label {
+            font-size: 10px;
+            color: #71717a;
+            text-transform: uppercase;
+        }
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #e4e4e7;
+        }
+        .stat-value.bad { color: #f87171; }
+        .stat-value.good { color: #22c55e; }
+
+        .section { margin-bottom: 32px; }
+        .section-title {
+            font-size: 16px;
+            color: #3b82f6;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1e1e2a;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .ranking-table th,
+        .ranking-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #1e1e2a;
+        }
+        .ranking-table th {
+            background: #0a0a0f;
+            color: #71717a;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+        .ranking-table tr:hover { background: #1a1a24; }
+        .ranking-table .rank {
+            font-weight: 700;
+            width: 40px;
+        }
+        .ranking-table .rank.top { color: #f87171; }
+        .ranking-table .method { font-family: monospace; color: #3b82f6; }
+
+        .bar-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #3b82f6;
+            transition: width 0.3s;
+        }
+        .bar.major { background: #f87171; }
+
+        .table-breakdown {
+            margin-top: 24px;
+        }
+        .table-breakdown th:first-child { width: 200px; }
+
+        .baseline-banner {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+        }
+        .baseline-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #3b82f6;
+            margin-bottom: 8px;
+        }
+        .baseline-stats {
+            display: flex;
+            gap: 24px;
+            font-size: 13px;
+            color: #e4e4e7;
+            margin-bottom: 8px;
+        }
+        .baseline-note {
+            font-size: 11px;
+            color: #71717a;
+        }
+        .stat-delta {
+            font-size: 10px;
+            margin-top: 4px;
+        }
+        .stat-delta.delta-bad { color: #f87171; }
+        .stat-delta.delta-good { color: #22c55e; }
+
+        .delta-bar-bad { background: #f87171; }
+        .delta-bar-good { background: #22c55e; }
+        .delta-text-bad { color: #f87171; }
+        .delta-text-good { color: #22c55e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RPC Method MDBX Impact</h1>
+        <p class="subtitle">Comparing page fault patterns across different RPC methods</p>
+
+        <div id="content"></div>
+    </div>
+
+    <script>
+const DATA = [
+{
+  "attribution": {
+    "directly_attributed": 1488326,
+    "timestamp_fallback": 0,
+    "uncorrelated": 12624
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 49.05639014675543,
+        "name": "HashedStorages",
+        "ops": 1537524,
+        "p95_latency_us": 36.588,
+        "pct": 31.666894596095325
+      },
+      {
+        "avg_latency_us": 62.29429393322731,
+        "name": "HashedAccounts",
+        "ops": 1052586,
+        "p95_latency_us": 112.1,
+        "pct": 21.679095685872603
+      },
+      {
+        "avg_latency_us": 70.65666510598525,
+        "name": "AccountsTrie",
+        "ops": 567060,
+        "p95_latency_us": 100.187,
+        "pct": 11.679186308416527
+      },
+      {
+        "avg_latency_us": 111.94914841221805,
+        "name": "StoragesTrie",
+        "ops": 533669,
+        "p95_latency_us": 300.152,
+        "pct": 10.991464180203753
+      },
+      {
+        "avg_latency_us": 8.540505428719877,
+        "name": "AccountsTrieChangeSets",
+        "ops": 261756,
+        "p95_latency_us": 22.422,
+        "pct": 5.391135137985181
+      },
+      {
+        "avg_latency_us": 9.590083378908961,
+        "name": "StoragesTrieChangeSets",
+        "ops": 245014,
+        "p95_latency_us": 35.136,
+        "pct": 5.046316358357788
+      },
+      {
+        "avg_latency_us": 25.29736831127156,
+        "name": "StoragesHistory",
+        "ops": 162045,
+        "p95_latency_us": 105.427,
+        "pct": 3.3374841204587806
+      },
+      {
+        "avg_latency_us": 2.58673427075949,
+        "name": "StorageChangeSets",
+        "ops": 102977,
+        "p95_latency_us": 3.036,
+        "pct": 2.1209176603565916
+      },
+      {
+        "avg_latency_us": 324.09129252460315,
+        "name": "PlainStorageState",
+        "ops": 95821,
+        "p95_latency_us": 2003.475,
+        "pct": 1.9735324502852962
+      },
+      {
+        "avg_latency_us": 40.85960167852582,
+        "name": "AccountsHistory",
+        "ops": 82215,
+        "p95_latency_us": 94.948,
+        "pct": 1.6933028292358214
+      },
+      {
+        "avg_latency_us": 227.91632572715946,
+        "name": "PlainAccountState",
+        "ops": 79453,
+        "p95_latency_us": 1122.991,
+        "pct": 1.6364165868913667
+      },
+      {
+        "avg_latency_us": 4.4253483842632475,
+        "name": "AccountChangeSets",
+        "ops": 59199,
+        "p95_latency_us": 3.196,
+        "pct": 1.2192645403871725
+      },
+      {
+        "avg_latency_us": 3.8299713283058314,
+        "name": "Receipts",
+        "ops": 26786,
+        "p95_latency_us": 3.005,
+        "pct": 0.5516853321645772
+      },
+      {
+        "avg_latency_us": 27.978862544036232,
+        "name": "HeaderNumbers",
+        "ops": 15896,
+        "p95_latency_us": 172.683,
+        "pct": 0.32739453595490625
+      },
+      {
+        "avg_latency_us": 3.035300970873786,
+        "name": "StageCheckpoints",
+        "ops": 14214,
+        "p95_latency_us": 4.238,
+        "pct": 0.2927520089370305
+      }
+    ],
+    "latency_avg_us": 64.2030806093707,
+    "latency_p95_us": 112.38,
+    "latency_p99_us": 1692.073,
+    "rate_per_sec": 19465.889019393147,
+    "seek_ratio": 62.482472776163966,
+    "total": 4855304
+  },
+  "label": "baseline",
+  "page_faults": {
+    "major": 501231,
+    "major_ratio": 0.3339425030813818,
+    "minor": 999719,
+    "random_ratio": 0.8823091257597693,
+    "rate_per_sec": 6019.875566130325,
+    "sequential_ratio": 0.11769087424023068,
+    "total": 1500950,
+    "unique_pages": 575165
+  },
+  "tables": [
+    {
+      "fault_pct": 15.446550518005264,
+      "faults": 231845,
+      "major_faults": 92194,
+      "name": "HashedStorages",
+      "slow_ops": 58754,
+      "time_lost_ms": 68737.57502,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 14.22479096572171,
+      "faults": 213507,
+      "major_faults": 88836,
+      "name": "HashedAccounts",
+      "slow_ops": 55980,
+      "time_lost_ms": 61011.542821,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 17.22409140877444,
+      "faults": 258525,
+      "major_faults": 77739,
+      "name": "StoragesTrie",
+      "slow_ops": 40187,
+      "time_lost_ms": 55934.527299,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 10.512941803524436,
+      "faults": 157794,
+      "major_faults": 39791,
+      "name": "AccountsTrie",
+      "slow_ops": 28402,
+      "time_lost_ms": 36187.969424,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 7.889936373630034,
+      "faults": 118424,
+      "major_faults": 36817,
+      "name": "PlainStorageState",
+      "slow_ops": 19869,
+      "time_lost_ms": 30199.042046,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 8.211466071488058,
+      "faults": 123250,
+      "major_faults": 45757,
+      "name": "PlainAccountState",
+      "slow_ops": 23758,
+      "time_lost_ms": 17236.308724,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 6.559379059928712,
+      "faults": 98453,
+      "major_faults": 29065,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 10915,
+      "time_lost_ms": 4540.018511,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 0.9143542423132016,
+      "faults": 13724,
+      "major_faults": 6511,
+      "name": "Bytecodes",
+      "slow_ops": 2799,
+      "time_lost_ms": 4009.302614,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 7.626170092274892,
+      "faults": 114465,
+      "major_faults": 30378,
+      "name": "StoragesHistory",
+      "slow_ops": 8603,
+      "time_lost_ms": 1900.526605,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 4.31746560511676,
+      "faults": 64803,
+      "major_faults": 15608,
+      "name": "AccountsHistory",
+      "slow_ops": 3073,
+      "time_lost_ms": 1753.777566,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 2.675172390819148,
+      "faults": 40153,
+      "major_faults": 14635,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 2952,
+      "time_lost_ms": 964.325292,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 2.7728438655518173,
+      "faults": 41619,
+      "major_faults": 13036,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 2127,
+      "time_lost_ms": 768.922968,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.5328625204037443,
+      "faults": 7998,
+      "major_faults": 3935,
+      "name": "HeaderNumbers",
+      "slow_ops": 1826,
+      "time_lost_ms": 328.488752,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.041906792364835604,
+      "faults": 629,
+      "major_faults": 198,
+      "name": "AccountChangeSets",
+      "slow_ops": 90,
+      "time_lost_ms": 124.845908,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.1071987741097305,
+      "faults": 1609,
+      "major_faults": 522,
+      "name": "StorageChangeSets",
+      "slow_ops": 80,
+      "time_lost_ms": 26.85758,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.07848362703621041,
+      "faults": 1178,
+      "major_faults": 360,
+      "name": "Receipts",
+      "slow_ops": 111,
+      "time_lost_ms": 22.331601,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.013791265531829843,
+      "faults": 207,
+      "major_faults": 81,
+      "name": "BlockWithdrawals",
+      "slow_ops": 28,
+      "time_lost_ms": 10.6341,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.005263333222292548,
+      "faults": 79,
+      "major_faults": 19,
+      "name": "BlockBodyIndices",
+      "slow_ops": 12,
+      "time_lost_ms": 1.773943,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.0006662447116826011,
+      "faults": 10,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 2,
+      "time_lost_ms": 0.353671,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.0033312235584130054,
+      "faults": 50,
+      "major_faults": 5,
+      "name": "TransactionBlocks",
+      "slow_ops": 1,
+      "time_lost_ms": 0.350174,
+      "top_op": "CURSOR_PUT"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 706618,
+      "percentage": 47.07805056797362,
+      "tid": 3157989
+    },
+    {
+      "faults": 30800,
+      "percentage": 2.052033711982411,
+      "tid": 3157963
+    },
+    {
+      "faults": 28397,
+      "percentage": 1.8919351077650821,
+      "tid": 3157962
+    },
+    {
+      "faults": 12261,
+      "percentage": 0.8168826409940371,
+      "tid": 3157990
+    },
+    {
+      "faults": 7353,
+      "percentage": 0.4898897365002165,
+      "tid": 3158188
+    },
+    {
+      "faults": 7075,
+      "percentage": 0.47136813351544027,
+      "tid": 3158169
+    },
+    {
+      "faults": 7071,
+      "percentage": 0.4711016356307672,
+      "tid": 3158196
+    },
+    {
+      "faults": 7060,
+      "percentage": 0.4703687664479163,
+      "tid": 3158190
+    },
+    {
+      "faults": 7041,
+      "percentage": 0.46910290149571937,
+      "tid": 3158157
+    },
+    {
+      "faults": 6946,
+      "percentage": 0.4627735767347346,
+      "tid": 3158155
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 30,
+      "max_block": 24221251,
+      "min_block": 24221222
+    },
+    "duration_secs": 249.332396245,
+    "file_size_gb": 659.493429264,
+    "total_events": 1500950
+  },
+  "transactions": {
+    "aborts": 19875,
+    "commit_latency_avg_us": 139439.32735294118,
+    "commit_latency_p99_us": 403710.186,
+    "commits": 17,
+    "max_concurrent_ro": 67,
+    "max_concurrent_rw": 1,
+    "rate_per_sec": 83.0197196764311,
+    "ro_count": 19876,
+    "rw_count": 17,
+    "total": 19893
+  }
+}
+,
+{
+  "attribution": {
+    "directly_attributed": 756273,
+    "timestamp_fallback": 0,
+    "uncorrelated": 7006
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 57.255729479519665,
+        "name": "HashedStorages",
+        "ops": 965243,
+        "p95_latency_us": 13.335,
+        "pct": 21.88821182273606
+      },
+      {
+        "avg_latency_us": 69.48858515767834,
+        "name": "HashedAccounts",
+        "ops": 720898,
+        "p95_latency_us": 38.853,
+        "pct": 16.3473530775015
+      },
+      {
+        "avg_latency_us": 3.054041088126247,
+        "name": "PruneCheckpoints",
+        "ops": 404034,
+        "p95_latency_us": 2.765,
+        "pct": 9.162026324549716
+      },
+      {
+        "avg_latency_us": 99.74463198860497,
+        "name": "AccountsTrie",
+        "ops": 385431,
+        "p95_latency_us": 56.175,
+        "pct": 8.740177728353359
+      },
+      {
+        "avg_latency_us": 126.15986761707701,
+        "name": "StoragesTrie",
+        "ops": 329121,
+        "p95_latency_us": 123.281,
+        "pct": 7.463271076102821
+      },
+      {
+        "avg_latency_us": 12.071941740391589,
+        "name": "AccountsHistory",
+        "ops": 275800,
+        "p95_latency_us": 25.758,
+        "pct": 6.254144107453362
+      },
+      {
+        "avg_latency_us": 3.6937886565784916,
+        "name": "StageCheckpoints",
+        "ops": 216425,
+        "p95_latency_us": 3.587,
+        "pct": 4.9077343671341325
+      },
+      {
+        "avg_latency_us": 11.048506706539223,
+        "name": "HeaderNumbers",
+        "ops": 216356,
+        "p95_latency_us": 10.85,
+        "pct": 4.906169697288541
+      },
+      {
+        "avg_latency_us": 67.86852063373301,
+        "name": "PlainAccountState",
+        "ops": 205828,
+        "p95_latency_us": 117.801,
+        "pct": 4.6674328257756
+      },
+      {
+        "avg_latency_us": 10.369333751266861,
+        "name": "AccountsTrieChangeSets",
+        "ops": 191418,
+        "p95_latency_us": 31.419,
+        "pct": 4.340666268167177
+      },
+      {
+        "avg_latency_us": 11.497738108800911,
+        "name": "StoragesTrieChangeSets",
+        "ops": 154484,
+        "p95_latency_us": 65.022,
+        "pct": 3.5031370496585392
+      },
+      {
+        "avg_latency_us": 27.839829285406413,
+        "name": "StoragesHistory",
+        "ops": 99763,
+        "p95_latency_us": 100.769,
+        "pct": 2.262263156605764
+      },
+      {
+        "avg_latency_us": 14.932401141250244,
+        "name": "AccountChangeSets",
+        "ops": 97437,
+        "p95_latency_us": 8.405,
+        "pct": 2.209517909347111
+      },
+      {
+        "avg_latency_us": 3.472809490295438,
+        "name": "StorageChangeSets",
+        "ops": 63939,
+        "p95_latency_us": 3.156,
+        "pct": 1.4499047138740409
+      },
+      {
+        "avg_latency_us": 445.1599309704989,
+        "name": "PlainStorageState",
+        "ops": 53354,
+        "p95_latency_us": 2852.949,
+        "pct": 1.2098752890103939
+      }
+    ],
+    "latency_avg_us": 55.18035852844842,
+    "latency_p95_us": 33.503,
+    "latency_p99_us": 1026.832,
+    "rate_per_sec": 14903.303405658695,
+    "seek_ratio": 72.9213247719437,
+    "total": 4409876
+  },
+  "label": "eth_getBalance",
+  "page_faults": {
+    "major": 219259,
+    "major_ratio": 0.2872593114706418,
+    "minor": 544020,
+    "random_ratio": 0.8661496859597683,
+    "rate_per_sec": 2566.708705468092,
+    "sequential_ratio": 0.13385031404023173,
+    "total": 763279,
+    "unique_pages": 358926
+  },
+  "tables": [
+    {
+      "fault_pct": 14.638552875160983,
+      "faults": 111733,
+      "major_faults": 41027,
+      "name": "HashedStorages",
+      "slow_ops": 28948,
+      "time_lost_ms": 51117.701499,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 13.337455897515849,
+      "faults": 101802,
+      "major_faults": 38016,
+      "name": "HashedAccounts",
+      "slow_ops": 26568,
+      "time_lost_ms": 46900.909645,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 15.692951070316358,
+      "faults": 119781,
+      "major_faults": 28736,
+      "name": "StoragesTrie",
+      "slow_ops": 18962,
+      "time_lost_ms": 38980.854769,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 11.227480383974928,
+      "faults": 85697,
+      "major_faults": 15434,
+      "name": "AccountsTrie",
+      "slow_ops": 14735,
+      "time_lost_ms": 35569.425634,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 7.5948637392093845,
+      "faults": 57970,
+      "major_faults": 15969,
+      "name": "PlainStorageState",
+      "slow_ops": 9596,
+      "time_lost_ms": 23200.16638,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 7.9893459665469635,
+      "faults": 60981,
+      "major_faults": 19112,
+      "name": "PlainAccountState",
+      "slow_ops": 12022,
+      "time_lost_ms": 12409.116004,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 7.032683985803356,
+      "faults": 53679,
+      "major_faults": 14633,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 6561,
+      "time_lost_ms": 2736.805718,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 7.475248238193373,
+      "faults": 57057,
+      "major_faults": 11370,
+      "name": "StoragesHistory",
+      "slow_ops": 5141,
+      "time_lost_ms": 1609.103263,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.42631855455213624,
+      "faults": 3254,
+      "major_faults": 1558,
+      "name": "Bytecodes",
+      "slow_ops": 739,
+      "time_lost_ms": 1385.301606,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 5.385448833257564,
+      "faults": 41106,
+      "major_faults": 7626,
+      "name": "AccountsHistory",
+      "slow_ops": 3194,
+      "time_lost_ms": 1273.304383,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.6694799673513879,
+      "faults": 5110,
+      "major_faults": 2474,
+      "name": "AccountChangeSets",
+      "slow_ops": 1167,
+      "time_lost_ms": 971.5545,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 3.3616803292112056,
+      "faults": 25659,
+      "major_faults": 9501,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 3212,
+      "time_lost_ms": 897.303188,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.9787548196662033,
+      "faults": 30369,
+      "major_faults": 9900,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 3161,
+      "time_lost_ms": 888.359544,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.02109320445079715,
+      "faults": 161,
+      "major_faults": 42,
+      "name": "HeaderNumbers",
+      "slow_ops": 712,
+      "time_lost_ms": 497.258879,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.0009170958456868328,
+      "faults": 7,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 227,
+      "time_lost_ms": 156.799866,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.12275982962979462,
+      "faults": 937,
+      "major_faults": 299,
+      "name": "StorageChangeSets",
+      "slow_ops": 140,
+      "time_lost_ms": 60.55634,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.018865971682700558,
+      "faults": 144,
+      "major_faults": 58,
+      "name": "BlockWithdrawals",
+      "slow_ops": 50,
+      "time_lost_ms": 55.241424,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.09695013225832232,
+      "faults": 740,
+      "major_faults": 229,
+      "name": "Receipts",
+      "slow_ops": 115,
+      "time_lost_ms": 49.544446,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.007205753073253687,
+      "faults": 55,
+      "major_faults": 15,
+      "name": "BlockBodyIndices",
+      "slow_ops": 14,
+      "time_lost_ms": 12.208565,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.0035373696905063546,
+      "faults": 27,
+      "major_faults": 1,
+      "name": "TransactionBlocks",
+      "slow_ops": 1,
+      "time_lost_ms": 0.103454,
+      "top_op": "CURSOR_PUT"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 431091,
+      "percentage": 56.478823601854636,
+      "tid": 3157989
+    },
+    {
+      "faults": 12125,
+      "percentage": 1.5885410184218351,
+      "tid": 3157963
+    },
+    {
+      "faults": 12016,
+      "percentage": 1.5742605259675686,
+      "tid": 3157962
+    },
+    {
+      "faults": 3992,
+      "percentage": 0.5230066594259766,
+      "tid": 3157990
+    },
+    {
+      "faults": 3852,
+      "percentage": 0.5046647425122399,
+      "tid": 3160957
+    },
+    {
+      "faults": 3791,
+      "percentage": 0.4966729072855404,
+      "tid": 3159521
+    },
+    {
+      "faults": 3716,
+      "percentage": 0.4868468803674672,
+      "tid": 3169451
+    },
+    {
+      "faults": 3626,
+      "percentage": 0.4750556480657793,
+      "tid": 3159525
+    },
+    {
+      "faults": 3527,
+      "percentage": 0.4620852925339227,
+      "tid": 3159522
+    },
+    {
+      "faults": 3508,
+      "percentage": 0.45959603238134417,
+      "tid": 3169247
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 19,
+      "max_block": 24221275,
+      "min_block": 24221257
+    },
+    "duration_secs": 297.376557914,
+    "file_size_gb": 659.493396496,
+    "total_events": 763279
+  },
+  "transactions": {
+    "aborts": 418861,
+    "commit_latency_avg_us": 191042.16207692306,
+    "commit_latency_p99_us": 482148.769,
+    "commits": 13,
+    "max_concurrent_ro": 117,
+    "max_concurrent_rw": 1,
+    "rate_per_sec": 1745.266066923313,
+    "ro_count": 418862,
+    "rw_count": 12,
+    "total": 418874
+  }
+}
+,
+{
+  "attribution": {
+    "directly_attributed": 849323,
+    "timestamp_fallback": 0,
+    "uncorrelated": 4022
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 60.01050521233614,
+        "name": "HashedStorages",
+        "ops": 1092984,
+        "p95_latency_us": 31.128,
+        "pct": 23.544460368363108
+      },
+      {
+        "avg_latency_us": 71.66304469029417,
+        "name": "HashedAccounts",
+        "ops": 786569,
+        "p95_latency_us": 31.519,
+        "pct": 16.9438369157124
+      },
+      {
+        "avg_latency_us": 105.07595162812592,
+        "name": "AccountsTrie",
+        "ops": 429113,
+        "p95_latency_us": 33.292,
+        "pct": 9.243716305132917
+      },
+      {
+        "avg_latency_us": 122.85308650159467,
+        "name": "StoragesTrie",
+        "ops": 403218,
+        "p95_latency_us": 138.97,
+        "pct": 8.685900453081322
+      },
+      {
+        "avg_latency_us": 3.0551809636953577,
+        "name": "PruneCheckpoints",
+        "ops": 391410,
+        "p95_latency_us": 2.785,
+        "pct": 8.431539009519813
+      },
+      {
+        "avg_latency_us": 12.961401169088507,
+        "name": "StoragesHistory",
+        "ops": 302800,
+        "p95_latency_us": 29.004,
+        "pct": 6.522751110300195
+      },
+      {
+        "avg_latency_us": 111.64167070390371,
+        "name": "PlainStorageState",
+        "ops": 265363,
+        "p95_latency_us": 44.263,
+        "pct": 5.716303840431277
+      },
+      {
+        "avg_latency_us": 11.383153222221692,
+        "name": "HeaderNumbers",
+        "ops": 209219,
+        "p95_latency_us": 10.931,
+        "pct": 4.50688066230481
+      },
+      {
+        "avg_latency_us": 4.05918952842544,
+        "name": "StageCheckpoints",
+        "ops": 209214,
+        "p95_latency_us": 4.027,
+        "pct": 4.50677295505398
+      },
+      {
+        "avg_latency_us": 9.709536137490547,
+        "name": "AccountsTrieChangeSets",
+        "ops": 166586,
+        "p95_latency_us": 22.201,
+        "pct": 3.588504017372749
+      },
+      {
+        "avg_latency_us": 10.14524277691188,
+        "name": "StoragesTrieChangeSets",
+        "ops": 155266,
+        "p95_latency_us": 28.022,
+        "pct": 3.3446548014923057
+      },
+      {
+        "avg_latency_us": 3.524994922777575,
+        "name": "StorageChangeSets",
+        "ops": 65784,
+        "p95_latency_us": 3.166,
+        "pct": 1.4170827577278338
+      },
+      {
+        "avg_latency_us": 24.02097048328943,
+        "name": "AccountsHistory",
+        "ops": 53529,
+        "p95_latency_us": 91.722,
+        "pct": 1.1530922859420711
+      },
+      {
+        "avg_latency_us": 330.582178354941,
+        "name": "PlainAccountState",
+        "ops": 46357,
+        "p95_latency_us": 1603.481,
+        "pct": 0.9985970053506809
+      },
+      {
+        "avg_latency_us": 3.0713788842170033,
+        "name": "AccountChangeSets",
+        "ops": 39004,
+        "p95_latency_us": 3.156,
+        "pct": 0.8402027222792233
+      }
+    ],
+    "latency_avg_us": 60.07294131355024,
+    "latency_p95_us": 32.992,
+    "latency_p99_us": 1128.141,
+    "rate_per_sec": 15686.17034890285,
+    "seek_ratio": 73.18537516481902,
+    "total": 4642213
+  },
+  "label": "eth_getStorageAt",
+  "page_faults": {
+    "major": 236020,
+    "major_ratio": 0.27658215610333453,
+    "minor": 617325,
+    "random_ratio": 0.8789772940338245,
+    "rate_per_sec": 2866.100700613104,
+    "sequential_ratio": 0.12102270596617543,
+    "total": 853345,
+    "unique_pages": 391233
+  },
+  "tables": [
+    {
+      "fault_pct": 18.182563910259038,
+      "faults": 155160,
+      "major_faults": 57994,
+      "name": "HashedStorages",
+      "slow_ops": 37270,
+      "time_lost_ms": 60630.243516,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 12.149599517194101,
+      "faults": 103678,
+      "major_faults": 37584,
+      "name": "HashedAccounts",
+      "slow_ops": 26015,
+      "time_lost_ms": 52873.189318,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 20.713544932002883,
+      "faults": 176758,
+      "major_faults": 43586,
+      "name": "StoragesTrie",
+      "slow_ops": 23115,
+      "time_lost_ms": 46274.131861,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 10.894421365332896,
+      "faults": 92967,
+      "major_faults": 15845,
+      "name": "AccountsTrie",
+      "slow_ops": 14318,
+      "time_lost_ms": 41994.523899,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 7.518412834199532,
+      "faults": 64158,
+      "major_faults": 16524,
+      "name": "PlainStorageState",
+      "slow_ops": 9841,
+      "time_lost_ms": 27278.540677,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 6.437138554746322,
+      "faults": 54931,
+      "major_faults": 15088,
+      "name": "PlainAccountState",
+      "slow_ops": 9701,
+      "time_lost_ms": 14653.443394,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 7.084942198055886,
+      "faults": 60459,
+      "major_faults": 16082,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 7683,
+      "time_lost_ms": 2923.791176,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 6.153665867849463,
+      "faults": 52512,
+      "major_faults": 9613,
+      "name": "StoragesHistory",
+      "slow_ops": 4891,
+      "time_lost_ms": 1726.997085,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.3209721742085557,
+      "faults": 2739,
+      "major_faults": 1303,
+      "name": "Bytecodes",
+      "slow_ops": 630,
+      "time_lost_ms": 1108.983981,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 3.015544709349677,
+      "faults": 25733,
+      "major_faults": 8470,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 2555,
+      "time_lost_ms": 712.830824,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.09933262631175,
+      "faults": 26448,
+      "major_faults": 7414,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 2172,
+      "time_lost_ms": 684.566624,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.683621512987127,
+      "faults": 31434,
+      "major_faults": 4120,
+      "name": "AccountsHistory",
+      "slow_ops": 1661,
+      "time_lost_ms": 606.311296,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.03585888474181017,
+      "faults": 306,
+      "major_faults": 106,
+      "name": "HeaderNumbers",
+      "slow_ops": 729,
+      "time_lost_ms": 521.570316,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.00082030128494337,
+      "faults": 7,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 266,
+      "time_lost_ms": 196.97286,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.10581886575769471,
+      "faults": 903,
+      "major_faults": 253,
+      "name": "StorageChangeSets",
+      "slow_ops": 159,
+      "time_lost_ms": 70.088655,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.07124902589222412,
+      "faults": 608,
+      "major_faults": 151,
+      "name": "Receipts",
+      "slow_ops": 88,
+      "time_lost_ms": 31.931459,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.00902331413437707,
+      "faults": 77,
+      "major_faults": 23,
+      "name": "BlockWithdrawals",
+      "slow_ops": 17,
+      "time_lost_ms": 25.693439,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.04347596810199861,
+      "faults": 371,
+      "major_faults": 98,
+      "name": "AccountChangeSets",
+      "slow_ops": 54,
+      "time_lost_ms": 24.426133,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.00492180770966022,
+      "faults": 42,
+      "major_faults": 7,
+      "name": "BlockBodyIndices",
+      "slow_ops": 6,
+      "time_lost_ms": 3.646395,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.00328120513977348,
+      "faults": 28,
+      "major_faults": 0,
+      "name": "TransactionBlocks",
+      "slow_ops": 0,
+      "time_lost_ms": 0.0,
+      "top_op": "CURSOR_PUT"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 478131,
+      "percentage": 56.03021052446549,
+      "tid": 3157989
+    },
+    {
+      "faults": 13009,
+      "percentage": 1.5244713451183285,
+      "tid": 9907
+    },
+    {
+      "faults": 12841,
+      "percentage": 1.5047841142796876,
+      "tid": 4187774
+    },
+    {
+      "faults": 8852,
+      "percentage": 1.0373295677598158,
+      "tid": 3157962
+    },
+    {
+      "faults": 6278,
+      "percentage": 0.7356930666963537,
+      "tid": 4187726
+    },
+    {
+      "faults": 6150,
+      "percentage": 0.720693271771675,
+      "tid": 4187733
+    },
+    {
+      "faults": 4829,
+      "percentage": 0.5658907007130761,
+      "tid": 9848
+    },
+    {
+      "faults": 4663,
+      "percentage": 0.5464378416701334,
+      "tid": 4187771
+    },
+    {
+      "faults": 4657,
+      "percentage": 0.5457347262830391,
+      "tid": 10119
+    },
+    {
+      "faults": 4617,
+      "percentage": 0.5410472903690771,
+      "tid": 4187743
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 21,
+      "max_block": 24221302,
+      "min_block": 24221282
+    },
+    "duration_secs": 297.737270647,
+    "file_size_gb": 659.518914576,
+    "total_events": 853345
+  },
+  "transactions": {
+    "aborts": 407931,
+    "commit_latency_avg_us": 204875.28525,
+    "commit_latency_p99_us": 462234.138,
+    "commits": 12,
+    "max_concurrent_ro": 116,
+    "max_concurrent_rw": 1,
+    "rate_per_sec": 1699.7420688705638,
+    "ro_count": 407932,
+    "rw_count": 12,
+    "total": 407944
+  }
+}
+,
+{
+  "attribution": {
+    "directly_attributed": 718192,
+    "timestamp_fallback": 0,
+    "uncorrelated": 2658
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 60.44270556265853,
+        "name": "HashedStorages",
+        "ops": 969860,
+        "p95_latency_us": 30.637,
+        "pct": 21.575122295212523
+      },
+      {
+        "avg_latency_us": 54.131975449427536,
+        "name": "HashedAccounts",
+        "ops": 700391,
+        "p95_latency_us": 11.532,
+        "pct": 15.58062140872517
+      },
+      {
+        "avg_latency_us": 116.28587699642924,
+        "name": "StoragesTrie",
+        "ops": 386753,
+        "p95_latency_us": 113.893,
+        "pct": 8.60355440273888
+      },
+      {
+        "avg_latency_us": 88.61775272558016,
+        "name": "AccountsTrie",
+        "ops": 375975,
+        "p95_latency_us": 50.414,
+        "pct": 8.363791273939052
+      },
+      {
+        "avg_latency_us": 3.1119855438887103,
+        "name": "PruneCheckpoints",
+        "ops": 367042,
+        "p95_latency_us": 2.876,
+        "pct": 8.16507128604066
+      },
+      {
+        "avg_latency_us": 10.976694799796508,
+        "name": "AccountsHistory",
+        "ops": 241779,
+        "p95_latency_us": 19.105,
+        "pct": 5.378520088893437
+      },
+      {
+        "avg_latency_us": 3.875283840709148,
+        "name": "StageCheckpoints",
+        "ops": 209378,
+        "p95_latency_us": 3.646,
+        "pct": 4.657740246970705
+      },
+      {
+        "avg_latency_us": 10.942550695635145,
+        "name": "HeaderNumbers",
+        "ops": 209377,
+        "p95_latency_us": 11.521,
+        "pct": 4.65771800136588
+      },
+      {
+        "avg_latency_us": 64.57778605803472,
+        "name": "PlainAccountState",
+        "ops": 196572,
+        "p95_latency_us": 76.924,
+        "pct": 4.372863031586535
+      },
+      {
+        "avg_latency_us": 10.560946425867849,
+        "name": "Bytecodes",
+        "ops": 184940,
+        "p95_latency_us": 7.173,
+        "pct": 4.114102156266475
+      },
+      {
+        "avg_latency_us": 13.056821188185756,
+        "name": "AccountsTrieChangeSets",
+        "ops": 162685,
+        "p95_latency_us": 38.832,
+        "pct": 3.619026220894407
+      },
+      {
+        "avg_latency_us": 13.482595078754713,
+        "name": "StoragesTrieChangeSets",
+        "ops": 162276,
+        "p95_latency_us": 48.972,
+        "pct": 3.6099277685211346
+      },
+      {
+        "avg_latency_us": 27.713536519921373,
+        "name": "StoragesHistory",
+        "ops": 96153,
+        "p95_latency_us": 96.41,
+        "pct": 2.138981640702338
+      },
+      {
+        "avg_latency_us": 6.755631960804998,
+        "name": "AccountChangeSets",
+        "ops": 85317,
+        "p95_latency_us": 8.275,
+        "pct": 1.8979282668226825
+      },
+      {
+        "avg_latency_us": 4.757645502323102,
+        "name": "StorageChangeSets",
+        "ops": 65645,
+        "p95_latency_us": 3.156,
+        "pct": 1.4603127287126247
+      }
+    ],
+    "latency_avg_us": 50.648184413394524,
+    "latency_p95_us": 31.369,
+    "latency_p99_us": 808.291,
+    "rate_per_sec": 15194.066804335567,
+    "seek_ratio": 73.8485563714749,
+    "total": 4495270
+  },
+  "label": "eth_getCode",
+  "page_faults": {
+    "major": 181210,
+    "major_ratio": 0.2513837830339183,
+    "minor": 539640,
+    "random_ratio": 0.8743592624807692,
+    "rate_per_sec": 2420.3924533243326,
+    "sequential_ratio": 0.1256407375192308,
+    "total": 720850,
+    "unique_pages": 346882
+  },
+  "tables": [
+    {
+      "fault_pct": 17.60282999237012,
+      "faults": 126890,
+      "major_faults": 44777,
+      "name": "HashedStorages",
+      "slow_ops": 32360,
+      "time_lost_ms": 54149.524455,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 21.43719220364847,
+      "faults": 154530,
+      "major_faults": 32625,
+      "name": "StoragesTrie",
+      "slow_ops": 21407,
+      "time_lost_ms": 41842.415142,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 10.543108829853646,
+      "faults": 76000,
+      "major_faults": 25201,
+      "name": "HashedAccounts",
+      "slow_ops": 19933,
+      "time_lost_ms": 34881.546169,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 10.543941180550739,
+      "faults": 76006,
+      "major_faults": 10935,
+      "name": "AccountsTrie",
+      "slow_ops": 12027,
+      "time_lost_ms": 30442.730296,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 7.412915308316571,
+      "faults": 53436,
+      "major_faults": 12280,
+      "name": "PlainStorageState",
+      "slow_ops": 9388,
+      "time_lost_ms": 19814.837515,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 6.277727682596934,
+      "faults": 45253,
+      "major_faults": 11444,
+      "name": "PlainAccountState",
+      "slow_ops": 8837,
+      "time_lost_ms": 11228.862005,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 7.147395435943678,
+      "faults": 51522,
+      "major_faults": 13388,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 6593,
+      "time_lost_ms": 2926.910892,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 6.520080460567386,
+      "faults": 47000,
+      "major_faults": 7882,
+      "name": "StoragesHistory",
+      "slow_ops": 4319,
+      "time_lost_ms": 1694.78361,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.688145938822224,
+      "faults": 26586,
+      "major_faults": 9051,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 3583,
+      "time_lost_ms": 1285.19105,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.582992300756052,
+      "faults": 25828,
+      "major_faults": 7627,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 3167,
+      "time_lost_ms": 1187.864037,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.809114240133176,
+      "faults": 27458,
+      "major_faults": 2780,
+      "name": "AccountsHistory",
+      "slow_ops": 1884,
+      "time_lost_ms": 1024.651588,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.24679198168828467,
+      "faults": 1779,
+      "major_faults": 848,
+      "name": "Bytecodes",
+      "slow_ops": 765,
+      "time_lost_ms": 986.412926,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.02302836928625928,
+      "faults": 166,
+      "major_faults": 36,
+      "name": "HeaderNumbers",
+      "slow_ops": 664,
+      "time_lost_ms": 500.61801,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 0.0008323506970937089,
+      "faults": 6,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 235,
+      "time_lost_ms": 202.921444,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.13400846223208712,
+      "faults": 966,
+      "major_faults": 284,
+      "name": "StorageChangeSets",
+      "slow_ops": 206,
+      "time_lost_ms": 146.149798,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.05327044461399737,
+      "faults": 384,
+      "major_faults": 110,
+      "name": "AccountChangeSets",
+      "slow_ops": 210,
+      "time_lost_ms": 145.016,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.08878407435666227,
+      "faults": 640,
+      "major_faults": 175,
+      "name": "Receipts",
+      "slow_ops": 110,
+      "time_lost_ms": 44.323057,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.01012693348130679,
+      "faults": 73,
+      "major_faults": 20,
+      "name": "BlockWithdrawals",
+      "slow_ops": 17,
+      "time_lost_ms": 26.604634,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.0056877297634736765,
+      "faults": 41,
+      "major_faults": 6,
+      "name": "BlockBodyIndices",
+      "slow_ops": 6,
+      "time_lost_ms": 2.133409,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.5027398210446001,
+      "faults": 3624,
+      "major_faults": 619,
+      "name": "TransactionBlocks",
+      "slow_ops": 0,
+      "time_lost_ms": 0.0,
+      "top_op": "CURSOR_GET"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 446145,
+      "percentage": 61.891516959145456,
+      "tid": 3157989
+    },
+    {
+      "faults": 5634,
+      "percentage": 0.7815773045709925,
+      "tid": 3157962
+    },
+    {
+      "faults": 4084,
+      "percentage": 0.5665533744884511,
+      "tid": 3157963
+    },
+    {
+      "faults": 3473,
+      "percentage": 0.4817923285010751,
+      "tid": 1019994
+    },
+    {
+      "faults": 3370,
+      "percentage": 0.46750364153429974,
+      "tid": 1020015
+    },
+    {
+      "faults": 3255,
+      "percentage": 0.451550253173337,
+      "tid": 1047476
+    },
+    {
+      "faults": 3191,
+      "percentage": 0.4426718457376708,
+      "tid": 1020008
+    },
+    {
+      "faults": 3187,
+      "percentage": 0.44211694527294165,
+      "tid": 3157990
+    },
+    {
+      "faults": 2965,
+      "percentage": 0.41131996948047445,
+      "tid": 1090326
+    },
+    {
+      "faults": 2907,
+      "percentage": 0.40327391274190194,
+      "tid": 1020024
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 21,
+      "max_block": 24221329,
+      "min_block": 24221309
+    },
+    "duration_secs": 297.823602536,
+    "file_size_gb": 659.549061136,
+    "total_events": 720850
+  },
+  "transactions": {
+    "aborts": 399092,
+    "commit_latency_avg_us": 183796.14363636362,
+    "commit_latency_p99_us": 498047.402,
+    "commits": 11,
+    "max_concurrent_ro": 113,
+    "max_concurrent_rw": 1,
+    "rate_per_sec": 1662.8037749815328,
+    "ro_count": 399043,
+    "rw_count": 12,
+    "total": 399055
+  }
+}
+,
+{
+  "attribution": {
+    "directly_attributed": 705219,
+    "timestamp_fallback": 0,
+    "uncorrelated": 2729
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 64.85637306037306,
+        "name": "HashedStorages",
+        "ops": 1038344,
+        "p95_latency_us": 19.376,
+        "pct": 31.324833781480006
+      },
+      {
+        "avg_latency_us": 54.55945419604582,
+        "name": "HashedAccounts",
+        "ops": 690257,
+        "p95_latency_us": 9.648,
+        "pct": 20.82372103224273
+      },
+      {
+        "avg_latency_us": 125.59864047847996,
+        "name": "StoragesTrie",
+        "ops": 406621,
+        "p95_latency_us": 104.635,
+        "pct": 12.266970519460969
+      },
+      {
+        "avg_latency_us": 92.33628620762563,
+        "name": "AccountsTrie",
+        "ops": 368914,
+        "p95_latency_us": 35.146,
+        "pct": 11.129423129195057
+      },
+      {
+        "avg_latency_us": 9.537562547953614,
+        "name": "AccountsTrieChangeSets",
+        "ops": 182468,
+        "p95_latency_us": 36.588,
+        "pct": 5.50470727469807
+      },
+      {
+        "avg_latency_us": 11.603099869665431,
+        "name": "StoragesTrieChangeSets",
+        "ops": 155753,
+        "p95_latency_us": 40.245,
+        "pct": 4.698767302519064
+      },
+      {
+        "avg_latency_us": 27.99047886231943,
+        "name": "StoragesHistory",
+        "ops": 98024,
+        "p95_latency_us": 89.788,
+        "pct": 2.957194828106866
+      },
+      {
+        "avg_latency_us": 2.8987061321031913,
+        "name": "StorageChangeSets",
+        "ops": 68068,
+        "p95_latency_us": 3.156,
+        "pct": 2.0534801432259258
+      },
+      {
+        "avg_latency_us": 179.52625163363015,
+        "name": "PlainAccountState",
+        "ops": 64121,
+        "p95_latency_us": 388.106,
+        "pct": 1.9344067735762707
+      },
+      {
+        "avg_latency_us": 361.7773975408499,
+        "name": "PlainStorageState",
+        "ops": 61322,
+        "p95_latency_us": 1822.749,
+        "pct": 1.8499663475186612
+      },
+      {
+        "avg_latency_us": 23.463484507706827,
+        "name": "AccountsHistory",
+        "ops": 50864,
+        "p95_latency_us": 76.313,
+        "pct": 1.534468678454538
+      },
+      {
+        "avg_latency_us": 3.0773147995677457,
+        "name": "AccountChangeSets",
+        "ops": 38866,
+        "p95_latency_us": 3.156,
+        "pct": 1.1725121826205978
+      },
+      {
+        "avg_latency_us": 3.812170038897787,
+        "name": "StageCheckpoints",
+        "ops": 30593,
+        "p95_latency_us": 4.819,
+        "pct": 0.9229317450448191
+      },
+      {
+        "avg_latency_us": 10.333087472613714,
+        "name": "HeaderNumbers",
+        "ops": 30581,
+        "p95_latency_us": 16.772,
+        "pct": 0.9225697282128467
+      },
+      {
+        "avg_latency_us": 4.67692281125885,
+        "name": "Receipts",
+        "ops": 17373,
+        "p95_latency_us": 3.386,
+        "pct": 0.5241098684883354
+      }
+    ],
+    "latency_avg_us": 71.04147554229367,
+    "latency_p95_us": 49.743,
+    "latency_p99_us": 1478.746,
+    "rate_per_sec": 13178.434536442734,
+    "seek_ratio": 63.308719205566135,
+    "total": 3314763
+  },
+  "label": "eth_getProof",
+  "page_faults": {
+    "major": 172870,
+    "major_ratio": 0.24418460112889648,
+    "minor": 535078,
+    "random_ratio": 0.8565810717468962,
+    "rate_per_sec": 2763.682542517854,
+    "sequential_ratio": 0.1434189282531037,
+    "total": 707948,
+    "unique_pages": 356364
+  },
+  "tables": [
+    {
+      "fault_pct": 17.785769576296566,
+      "faults": 125914,
+      "major_faults": 43670,
+      "name": "HashedStorages",
+      "slow_ops": 32644,
+      "time_lost_ms": 62674.624941,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 21.776740664568585,
+      "faults": 154168,
+      "major_faults": 31423,
+      "name": "StoragesTrie",
+      "slow_ops": 21111,
+      "time_lost_ms": 47835.080309,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 9.66313910061191,
+      "faults": 68410,
+      "major_faults": 21880,
+      "name": "HashedAccounts",
+      "slow_ops": 17384,
+      "time_lost_ms": 34727.52577,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 10.342426279896264,
+      "faults": 73219,
+      "major_faults": 9841,
+      "name": "AccountsTrie",
+      "slow_ops": 11062,
+      "time_lost_ms": 31392.758968,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 7.526258990773334,
+      "faults": 53282,
+      "major_faults": 11764,
+      "name": "PlainStorageState",
+      "slow_ops": 8678,
+      "time_lost_ms": 21615.288002,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 6.391994892280224,
+      "faults": 45252,
+      "major_faults": 11876,
+      "name": "PlainAccountState",
+      "slow_ops": 8623,
+      "time_lost_ms": 10750.427116,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 7.156599072248245,
+      "faults": 50665,
+      "major_faults": 13112,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 6571,
+      "time_lost_ms": 2587.664709,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 6.938221451293034,
+      "faults": 49119,
+      "major_faults": 6933,
+      "name": "StoragesHistory",
+      "slow_ops": 3121,
+      "time_lost_ms": 1647.17236,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.6045020255724993,
+      "faults": 25518,
+      "major_faults": 8324,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 3034,
+      "time_lost_ms": 950.995402,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 4.092249713255776,
+      "faults": 28971,
+      "major_faults": 9251,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 2668,
+      "time_lost_ms": 695.966006,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.26145988123421493,
+      "faults": 1851,
+      "major_faults": 862,
+      "name": "Bytecodes",
+      "slow_ops": 446,
+      "time_lost_ms": 680.572173,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 3.723013554667857,
+      "faults": 26357,
+      "major_faults": 2118,
+      "name": "AccountsHistory",
+      "slow_ops": 1071,
+      "time_lost_ms": 591.319231,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.034748314847983186,
+      "faults": 246,
+      "major_faults": 80,
+      "name": "HeaderNumbers",
+      "slow_ops": 102,
+      "time_lost_ms": 38.630398,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.13419064677066678,
+      "faults": 950,
+      "major_faults": 275,
+      "name": "StorageChangeSets",
+      "slow_ops": 128,
+      "time_lost_ms": 32.667096,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.01144151830360422,
+      "faults": 81,
+      "major_faults": 25,
+      "name": "BlockWithdrawals",
+      "slow_ops": 20,
+      "time_lost_ms": 26.868747,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.10438619785633974,
+      "faults": 739,
+      "major_faults": 219,
+      "name": "Receipts",
+      "slow_ops": 88,
+      "time_lost_ms": 26.255442,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.05664257826846039,
+      "faults": 401,
+      "major_faults": 122,
+      "name": "AccountChangeSets",
+      "slow_ops": 64,
+      "time_lost_ms": 25.854606,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.005650132495607022,
+      "faults": 40,
+      "major_faults": 6,
+      "name": "BlockBodyIndices",
+      "slow_ops": 6,
+      "time_lost_ms": 11.673234,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.0009887731867312289,
+      "faults": 7,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 11,
+      "time_lost_ms": 11.281393,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.004096346059315091,
+      "faults": 29,
+      "major_faults": 0,
+      "name": "TransactionBlocks",
+      "slow_ops": 0,
+      "time_lost_ms": 0.0,
+      "top_op": "CURSOR_PUT"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 446797,
+      "percentage": 63.11155621599327,
+      "tid": 3157989
+    },
+    {
+      "faults": 6448,
+      "percentage": 0.9108013582918519,
+      "tid": 3157963
+    },
+    {
+      "faults": 5056,
+      "percentage": 0.7141767474447276,
+      "tid": 3157962
+    },
+    {
+      "faults": 3822,
+      "percentage": 0.539870159955251,
+      "tid": 2348766
+    },
+    {
+      "faults": 3778,
+      "percentage": 0.5336550142100832,
+      "tid": 2348772
+    },
+    {
+      "faults": 3701,
+      "percentage": 0.5227785091560397,
+      "tid": 2348768
+    },
+    {
+      "faults": 3551,
+      "percentage": 0.5015905122975134,
+      "tid": 2348770
+    },
+    {
+      "faults": 3543,
+      "percentage": 0.500460485798392,
+      "tid": 2348775
+    },
+    {
+      "faults": 3517,
+      "percentage": 0.4967878996762474,
+      "tid": 2348774
+    },
+    {
+      "faults": 3487,
+      "percentage": 0.4925503003045421,
+      "tid": 2348758
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 21,
+      "max_block": 24221350,
+      "min_block": 24221330
+    },
+    "duration_secs": 256.161114422,
+    "file_size_gb": 659.622817808,
+    "total_events": 707948
+  },
+  "transactions": {
+    "aborts": 34794,
+    "commit_latency_avg_us": 230458.1057,
+    "commit_latency_p99_us": 486120.37,
+    "commits": 10,
+    "max_concurrent_ro": 855,
+    "max_concurrent_rw": 1,
+    "rate_per_sec": 144.1446585588043,
+    "ro_count": 35583,
+    "rw_count": 10,
+    "total": 35593
+  }
+}
+,
+{
+  "attribution": {
+    "directly_attributed": 649007,
+    "timestamp_fallback": 0,
+    "uncorrelated": 2336
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 63.418079281026024,
+        "name": "HashedStorages",
+        "ops": 984069,
+        "p95_latency_us": 42.018,
+        "pct": 30.301012056740213
+      },
+      {
+        "avg_latency_us": 61.589010234271036,
+        "name": "HashedAccounts",
+        "ops": 646260,
+        "p95_latency_us": 10.68,
+        "pct": 19.899348573920047
+      },
+      {
+        "avg_latency_us": 131.33852107784088,
+        "name": "StoragesTrie",
+        "ops": 384361,
+        "p95_latency_us": 111.639,
+        "pct": 11.83507182437484
+      },
+      {
+        "avg_latency_us": 109.5411924383276,
+        "name": "AccountsTrie",
+        "ops": 322389,
+        "p95_latency_us": 50.294,
+        "pct": 9.92685774672347
+      },
+      {
+        "avg_latency_us": 41.68846175320845,
+        "name": "Receipts",
+        "ops": 272951,
+        "p95_latency_us": 6.302,
+        "pct": 8.404584985300113
+      },
+      {
+        "avg_latency_us": 14.120246093934547,
+        "name": "AccountsTrieChangeSets",
+        "ops": 148167,
+        "p95_latency_us": 33.623,
+        "pct": 4.562291926085495
+      },
+      {
+        "avg_latency_us": 15.602631240137091,
+        "name": "StoragesTrieChangeSets",
+        "ops": 143847,
+        "p95_latency_us": 48.35,
+        "pct": 4.429272420252959
+      },
+      {
+        "avg_latency_us": 44.565137915782024,
+        "name": "StoragesHistory",
+        "ops": 90432,
+        "p95_latency_us": 97.893,
+        "pct": 2.7845416554277502
+      },
+      {
+        "avg_latency_us": 10.444272016074576,
+        "name": "StorageChangeSets",
+        "ops": 60717,
+        "p95_latency_us": 3.437,
+        "pct": 1.8695706795449254
+      },
+      {
+        "avg_latency_us": 536.4446288533563,
+        "name": "PlainStorageState",
+        "ops": 55536,
+        "p95_latency_us": 3364.144,
+        "pct": 1.7100396472027106
+      },
+      {
+        "avg_latency_us": 42.80379557844433,
+        "name": "AccountsHistory",
+        "ops": 43107,
+        "p95_latency_us": 71.874,
+        "pct": 1.3273314439636856
+      },
+      {
+        "avg_latency_us": 5.641329878295514,
+        "name": "AccountChangeSets",
+        "ops": 32127,
+        "p95_latency_us": 3.496,
+        "pct": 0.9892401999726571
+      },
+      {
+        "avg_latency_us": 509.2853181472323,
+        "name": "PlainAccountState",
+        "ops": 31542,
+        "p95_latency_us": 3132.471,
+        "pct": 0.971227141891168
+      },
+      {
+        "avg_latency_us": 10.313748460144927,
+        "name": "HeaderNumbers",
+        "ops": 11040,
+        "p95_latency_us": 15.79,
+        "pct": 0.33993873712759154
+      },
+      {
+        "avg_latency_us": 3.3476071940971512,
+        "name": "StageCheckpoints",
+        "ops": 9758,
+        "p95_latency_us": 4.779,
+        "pct": 0.30046396710969553
+      }
+    ],
+    "latency_avg_us": 80.22138358268333,
+    "latency_p95_us": 68.739,
+    "latency_p99_us": 1988.28,
+    "rate_per_sec": 12723.067894981406,
+    "seek_ratio": 58.662279486298374,
+    "total": 3247644
+  },
+  "label": "eth_getBlockReceipts",
+  "page_faults": {
+    "major": 168142,
+    "major_ratio": 0.25814662934889915,
+    "minor": 483201,
+    "random_ratio": 0.8805312723576861,
+    "rate_per_sec": 2532.7311416807047,
+    "sequential_ratio": 0.11946872764231387,
+    "total": 651343,
+    "unique_pages": 332152
+  },
+  "tables": [
+    {
+      "fault_pct": 18.785493971686194,
+      "faults": 122358,
+      "major_faults": 43517,
+      "name": "HashedStorages",
+      "slow_ops": 33865,
+      "time_lost_ms": 57662.891374,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 22.501201363951097,
+      "faults": 146560,
+      "major_faults": 29785,
+      "name": "StoragesTrie",
+      "slow_ops": 21079,
+      "time_lost_ms": 47063.562928,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 9.088913214696404,
+      "faults": 59200,
+      "major_faults": 19569,
+      "name": "HashedAccounts",
+      "slow_ops": 16014,
+      "time_lost_ms": 36930.115692,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 9.34100773325268,
+      "faults": 60842,
+      "major_faults": 8846,
+      "name": "AccountsTrie",
+      "slow_ops": 9371,
+      "time_lost_ms": 32828.667186,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 7.4410871077143685,
+      "faults": 48467,
+      "major_faults": 11099,
+      "name": "PlainStorageState",
+      "slow_ops": 8651,
+      "time_lost_ms": 29176.810505,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 5.80661801846339,
+      "faults": 37821,
+      "major_faults": 10231,
+      "name": "PlainAccountState",
+      "slow_ops": 6896,
+      "time_lost_ms": 15439.91739,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 3.2971875033584452,
+      "faults": 21476,
+      "major_faults": 10613,
+      "name": "Receipts",
+      "slow_ops": 7269,
+      "time_lost_ms": 10488.659596,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 6.622777860512817,
+      "faults": 43137,
+      "major_faults": 6028,
+      "name": "StoragesHistory",
+      "slow_ops": 4061,
+      "time_lost_ms": 2979.971405,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 5.666906683575321,
+      "faults": 36911,
+      "major_faults": 9439,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 4794,
+      "time_lost_ms": 2545.557715,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 3.637714691030686,
+      "faults": 23694,
+      "major_faults": 7729,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 3549,
+      "time_lost_ms": 1412.917296,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.352304392616486,
+      "faults": 21835,
+      "major_faults": 1423,
+      "name": "AccountsHistory",
+      "slow_ops": 1294,
+      "time_lost_ms": 1297.998293,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.6151459369333825,
+      "faults": 23547,
+      "major_faults": 7640,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 3018,
+      "time_lost_ms": 1214.976642,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.22046755703216278,
+      "faults": 1436,
+      "major_faults": 697,
+      "name": "Bytecodes",
+      "slow_ops": 349,
+      "time_lost_ms": 956.939141,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.0414528136481086,
+      "faults": 270,
+      "major_faults": 120,
+      "name": "BlockWithdrawals",
+      "slow_ops": 124,
+      "time_lost_ms": 571.371695,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.13618016928100862,
+      "faults": 887,
+      "major_faults": 270,
+      "name": "StorageChangeSets",
+      "slow_ops": 240,
+      "time_lost_ms": 468.627681,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.050818078953792395,
+      "faults": 331,
+      "major_faults": 102,
+      "name": "AccountChangeSets",
+      "slow_ops": 107,
+      "time_lost_ms": 94.401616,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.025485803946614916,
+      "faults": 166,
+      "major_faults": 45,
+      "name": "HeaderNumbers",
+      "slow_ops": 59,
+      "time_lost_ms": 25.047504,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.005219983940872934,
+      "faults": 34,
+      "major_faults": 5,
+      "name": "BlockBodyIndices",
+      "slow_ops": 8,
+      "time_lost_ms": 4.604788,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.0036846945464985422,
+      "faults": 24,
+      "major_faults": 0,
+      "name": "TransactionBlocks",
+      "slow_ops": 1,
+      "time_lost_ms": 2.903132,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.0009211736366246356,
+      "faults": 6,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 1,
+      "time_lost_ms": 0.125404,
+      "top_op": "CURSOR_PUT"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 384241,
+      "percentage": 58.99211321838111,
+      "tid": 3157989
+    },
+    {
+      "faults": 6527,
+      "percentage": 1.002083387708166,
+      "tid": 2725824
+    },
+    {
+      "faults": 5006,
+      "percentage": 0.7685658708238209,
+      "tid": 3157962
+    },
+    {
+      "faults": 4452,
+      "percentage": 0.6835108383754795,
+      "tid": 3157990
+    },
+    {
+      "faults": 4094,
+      "percentage": 0.6285474780568764,
+      "tid": 3157963
+    },
+    {
+      "faults": 2037,
+      "percentage": 0.3127384496340638,
+      "tid": 2725791
+    },
+    {
+      "faults": 1747,
+      "percentage": 0.2682150571972064,
+      "tid": 2749089
+    },
+    {
+      "faults": 1721,
+      "percentage": 0.264223304771833,
+      "tid": 2749073
+    },
+    {
+      "faults": 1652,
+      "percentage": 0.25362980795064966,
+      "tid": 2726534
+    },
+    {
+      "faults": 1621,
+      "percentage": 0.24887041082808903,
+      "tid": 2749047
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 18,
+      "max_block": 24221371,
+      "min_block": 24221354
+    },
+    "duration_secs": 257.170210166,
+    "file_size_gb": 659.622752272,
+    "total_events": 651343
+  },
+  "transactions": {
+    "aborts": 28401,
+    "commit_latency_avg_us": 290529.43890909094,
+    "commit_latency_p99_us": 558116.852,
+    "commits": 11,
+    "max_concurrent_ro": 114,
+    "max_concurrent_rw": 1,
+    "rate_per_sec": 118.38983011558585,
+    "ro_count": 28402,
+    "rw_count": 11,
+    "total": 28413
+  }
+}
+,
+{
+  "attribution": {
+    "directly_attributed": 677903,
+    "timestamp_fallback": 0,
+    "uncorrelated": 3784
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 46.22200648552604,
+        "name": "HashedStorages",
+        "ops": 1027673,
+        "p95_latency_us": 14.177,
+        "pct": 16.204691268631862
+      },
+      {
+        "avg_latency_us": 7.023727442958278,
+        "name": "AccountsHistory",
+        "ops": 713469,
+        "p95_latency_us": 6.933,
+        "pct": 11.250217603011373
+      },
+      {
+        "avg_latency_us": 42.05581703305688,
+        "name": "HashedAccounts",
+        "ops": 691021,
+        "p95_latency_us": 9.148,
+        "pct": 10.896250037844002
+      },
+      {
+        "avg_latency_us": 10.930483345082454,
+        "name": "StoragesHistory",
+        "ops": 462446,
+        "p95_latency_us": 18.845,
+        "pct": 7.29200305779536
+      },
+      {
+        "avg_latency_us": 23.945776928358793,
+        "name": "PlainAccountState",
+        "ops": 447103,
+        "p95_latency_us": 8.617,
+        "pct": 7.050069506816967
+      },
+      {
+        "avg_latency_us": 55.870054820470486,
+        "name": "PlainStorageState",
+        "ops": 415447,
+        "p95_latency_us": 14.597,
+        "pct": 6.550907120727412
+      },
+      {
+        "avg_latency_us": 89.99053918765897,
+        "name": "StoragesTrie",
+        "ops": 412413,
+        "p95_latency_us": 56.776,
+        "pct": 6.503065994893582
+      },
+      {
+        "avg_latency_us": 3.362352822737783,
+        "name": "PruneCheckpoints",
+        "ops": 384910,
+        "p95_latency_us": 2.885,
+        "pct": 6.069389500560091
+      },
+      {
+        "avg_latency_us": 68.32619442730207,
+        "name": "AccountsTrie",
+        "ops": 366214,
+        "p95_latency_us": 31.128,
+        "pct": 5.7745847251516285
+      },
+      {
+        "avg_latency_us": 7.239656135584807,
+        "name": "AccountChangeSets",
+        "ops": 290062,
+        "p95_latency_us": 6.793,
+        "pct": 4.573794542390329
+      },
+      {
+        "avg_latency_us": 9.54296383764436,
+        "name": "Bytecodes",
+        "ops": 246693,
+        "p95_latency_us": 7.364,
+        "pct": 3.889937658314075
+      },
+      {
+        "avg_latency_us": 13.127312085135854,
+        "name": "HeaderNumbers",
+        "ops": 205037,
+        "p95_latency_us": 12.012,
+        "pct": 3.233091930649605
+      },
+      {
+        "avg_latency_us": 5.046623633379254,
+        "name": "StageCheckpoints",
+        "ops": 204702,
+        "p95_latency_us": 4.419,
+        "pct": 3.2278095387068455
+      },
+      {
+        "avg_latency_us": 11.51706715639528,
+        "name": "AccountsTrieChangeSets",
+        "ops": 201336,
+        "p95_latency_us": 23.584,
+        "pct": 3.1747333259327286
+      },
+      {
+        "avg_latency_us": 11.877490622399925,
+        "name": "StoragesTrieChangeSets",
+        "ops": 173072,
+        "p95_latency_us": 30.467,
+        "pct": 2.729057129305386
+      }
+    ],
+    "latency_avg_us": 31.501245418195143,
+    "latency_p95_us": 13.135,
+    "latency_p99_us": 249.787,
+    "rate_per_sec": 21988.460154855613,
+    "seek_ratio": 79.9760605150821,
+    "total": 6341824
+  },
+  "label": "eth_call",
+  "page_faults": {
+    "major": 155436,
+    "major_ratio": 0.22801667040738638,
+    "minor": 526251,
+    "random_ratio": 0.8897014167813333,
+    "rate_per_sec": 2350.004827004206,
+    "sequential_ratio": 0.11029858321866666,
+    "total": 681687,
+    "unique_pages": 334809
+  },
+  "tables": [
+    {
+      "fault_pct": 17.051374017694336,
+      "faults": 116237,
+      "major_faults": 38284,
+      "name": "HashedStorages",
+      "slow_ops": 26859,
+      "time_lost_ms": 42860.981164,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 21.34762728348934,
+      "faults": 145524,
+      "major_faults": 25763,
+      "name": "StoragesTrie",
+      "slow_ops": 15557,
+      "time_lost_ms": 33849.259836,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 9.232242950210287,
+      "faults": 62935,
+      "major_faults": 19410,
+      "name": "HashedAccounts",
+      "slow_ops": 14149,
+      "time_lost_ms": 26074.798025,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 10.500420280862038,
+      "faults": 71580,
+      "major_faults": 9044,
+      "name": "AccountsTrie",
+      "slow_ops": 8174,
+      "time_lost_ms": 22464.187981,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 7.810182679147467,
+      "faults": 53241,
+      "major_faults": 11226,
+      "name": "PlainStorageState",
+      "slow_ops": 8146,
+      "time_lost_ms": 19657.06254,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 5.2478630221788,
+      "faults": 35774,
+      "major_faults": 7355,
+      "name": "PlainAccountState",
+      "slow_ops": 6222,
+      "time_lost_ms": 8116.847963,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 7.165898718913518,
+      "faults": 48849,
+      "major_faults": 12416,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 6397,
+      "time_lost_ms": 2778.744127,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 7.47865222602162,
+      "faults": 50981,
+      "major_faults": 6129,
+      "name": "StoragesHistory",
+      "slow_ops": 4062,
+      "time_lost_ms": 2016.304771,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.889174943925878,
+      "faults": 26512,
+      "major_faults": 1419,
+      "name": "AccountsHistory",
+      "slow_ops": 2105,
+      "time_lost_ms": 1488.112112,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 4.689395573041587,
+      "faults": 31967,
+      "major_faults": 10753,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 3454,
+      "time_lost_ms": 1215.37696,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 4.2413893766494,
+      "faults": 28913,
+      "major_faults": 9844,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 3409,
+      "time_lost_ms": 1108.784389,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.21534809964103763,
+      "faults": 1468,
+      "major_faults": 708,
+      "name": "Bytecodes",
+      "slow_ops": 857,
+      "time_lost_ms": 1000.542318,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.1588705666970325,
+      "faults": 1083,
+      "major_faults": 494,
+      "name": "HeaderNumbers",
+      "slow_ops": 974,
+      "time_lost_ms": 810.98319,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.08346939284451661,
+      "faults": 569,
+      "major_faults": 207,
+      "name": "AccountChangeSets",
+      "slow_ops": 702,
+      "time_lost_ms": 618.110119,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.0010268642353455472,
+      "faults": 7,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 290,
+      "time_lost_ms": 318.206188,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.16444497254605117,
+      "faults": 1121,
+      "major_faults": 355,
+      "name": "StorageChangeSets",
+      "slow_ops": 211,
+      "time_lost_ms": 107.953071,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.026111690555929625,
+      "faults": 178,
+      "major_faults": 73,
+      "name": "BlockWithdrawals",
+      "slow_ops": 44,
+      "time_lost_ms": 53.809388,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.1271844702920842,
+      "faults": 867,
+      "major_faults": 283,
+      "name": "Receipts",
+      "slow_ops": 130,
+      "time_lost_ms": 46.292076,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.008801693445818977,
+      "faults": 60,
+      "major_faults": 15,
+      "name": "BlockBodyIndices",
+      "slow_ops": 11,
+      "time_lost_ms": 2.589765,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.0005867795630545983,
+      "faults": 4,
+      "major_faults": 2,
+      "name": "BlockOmmers",
+      "slow_ops": 1,
+      "time_lost_ms": 0.196537,
+      "top_op": "CURSOR_GET"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 456451,
+      "percentage": 66.95902958395862,
+      "tid": 3157989
+    },
+    {
+      "faults": 3800,
+      "percentage": 0.5574405849018684,
+      "tid": 3157962
+    },
+    {
+      "faults": 3090,
+      "percentage": 0.45328721245967724,
+      "tid": 3157963
+    },
+    {
+      "faults": 3053,
+      "percentage": 0.4478595015014222,
+      "tid": 2795772
+    },
+    {
+      "faults": 2851,
+      "percentage": 0.41822713356716495,
+      "tid": 3157990
+    },
+    {
+      "faults": 2752,
+      "percentage": 0.4037043393815637,
+      "tid": 2837892
+    },
+    {
+      "faults": 2731,
+      "percentage": 0.400623746675527,
+      "tid": 2795742
+    },
+    {
+      "faults": 2639,
+      "percentage": 0.38712781672527125,
+      "tid": 2795769
+    },
+    {
+      "faults": 2621,
+      "percentage": 0.3844873086915256,
+      "tid": 2837907
+    },
+    {
+      "faults": 2526,
+      "percentage": 0.3705512940689789,
+      "tid": 2795756
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 21,
+      "max_block": 24221398,
+      "min_block": 24221378
+    },
+    "duration_secs": 290.078978633,
+    "file_size_gb": 659.622731792,
+    "total_events": 681687
+  },
+  "transactions": {
+    "aborts": 401041,
+    "commit_latency_avg_us": 200007.0146153846,
+    "commit_latency_p99_us": 433791.349,
+    "commits": 13,
+    "max_concurrent_ro": 109,
+    "max_concurrent_rw": 1,
+    "rate_per_sec": 1671.1151315451405,
+    "ro_count": 401039,
+    "rw_count": 13,
+    "total": 401052
+  }
+}
+,
+{
+  "attribution": {
+    "directly_attributed": 624797,
+    "timestamp_fallback": 0,
+    "uncorrelated": 2341
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 36.60156242418968,
+        "name": "HashedStorages",
+        "ops": 1103082,
+        "p95_latency_us": 10.92,
+        "pct": 33.16027940343591
+      },
+      {
+        "avg_latency_us": 34.60844328344772,
+        "name": "HashedAccounts",
+        "ops": 721985,
+        "p95_latency_us": 8.446,
+        "pct": 21.70393889582975
+      },
+      {
+        "avg_latency_us": 71.8628609170241,
+        "name": "StoragesTrie",
+        "ops": 404744,
+        "p95_latency_us": 59.591,
+        "pct": 12.1672043663701
+      },
+      {
+        "avg_latency_us": 58.95508614874175,
+        "name": "AccountsTrie",
+        "ops": 362884,
+        "p95_latency_us": 28.373,
+        "pct": 10.908830740630739
+      },
+      {
+        "avg_latency_us": 7.914941628199748,
+        "name": "AccountsTrieChangeSets",
+        "ops": 166810,
+        "p95_latency_us": 26.059,
+        "pct": 5.014555769459699
+      },
+      {
+        "avg_latency_us": 8.417962089065353,
+        "name": "StoragesTrieChangeSets",
+        "ops": 153887,
+        "p95_latency_us": 31.258,
+        "pct": 4.626071240901893
+      },
+      {
+        "avg_latency_us": 12.96790806838153,
+        "name": "StoragesHistory",
+        "ops": 93885,
+        "p95_latency_us": 75.812,
+        "pct": 2.822322213390827
+      },
+      {
+        "avg_latency_us": 2.6008811614958574,
+        "name": "StorageChangeSets",
+        "ops": 68429,
+        "p95_latency_us": 3.125,
+        "pct": 2.057077134154773
+      },
+      {
+        "avg_latency_us": 282.93208906437104,
+        "name": "PlainStorageState",
+        "ops": 61798,
+        "p95_latency_us": 1167.352,
+        "pct": 1.8577394487205232
+      },
+      {
+        "avg_latency_us": 151.57123030254166,
+        "name": "PlainAccountState",
+        "ops": 49613,
+        "p95_latency_us": 235.22,
+        "pct": 1.491440293688652
+      },
+      {
+        "avg_latency_us": 11.226972847528428,
+        "name": "AccountsHistory",
+        "ops": 43090,
+        "p95_latency_us": 42.45,
+        "pct": 1.2953492482825875
+      },
+      {
+        "avg_latency_us": 2.4765263478437403,
+        "name": "AccountChangeSets",
+        "ops": 34481,
+        "p95_latency_us": 3.095,
+        "pct": 1.036549951961752
+      },
+      {
+        "avg_latency_us": 15.403746104491292,
+        "name": "HeaderNumbers",
+        "ops": 17456,
+        "p95_latency_us": 16.912,
+        "pct": 0.5247532252963761
+      },
+      {
+        "avg_latency_us": 3.238995319433469,
+        "name": "StageCheckpoints",
+        "ops": 16451,
+        "p95_latency_us": 4.649,
+        "pct": 0.4945414361452041
+      },
+      {
+        "avg_latency_us": 3.8647800388852884,
+        "name": "Receipts",
+        "ops": 15430,
+        "p95_latency_us": 3.106,
+        "pct": 0.4638486632861529
+      }
+    ],
+    "latency_avg_us": 44.53496406420411,
+    "latency_p95_us": 32.611,
+    "latency_p99_us": 588.621,
+    "rate_per_sec": 13237.909759797165,
+    "seek_ratio": 63.88485731017076,
+    "total": 3326516
+  },
+  "label": "trace_transaction",
+  "page_faults": {
+    "major": 138132,
+    "major_ratio": 0.22025774231508854,
+    "minor": 489006,
+    "random_ratio": 0.878020273082277,
+    "rate_per_sec": 2488.7894528265747,
+    "sequential_ratio": 0.12197972691772292,
+    "total": 627138,
+    "unique_pages": 312567
+  },
+  "tables": [
+    {
+      "fault_pct": 17.50491917249473,
+      "faults": 109780,
+      "major_faults": 35662,
+      "name": "HashedStorages",
+      "slow_ops": 24282,
+      "time_lost_ms": 35362.862337,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 21.85962260299966,
+      "faults": 137090,
+      "major_faults": 24117,
+      "name": "StoragesTrie",
+      "slow_ops": 14676,
+      "time_lost_ms": 25908.399275,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 9.09273557016159,
+      "faults": 57024,
+      "major_faults": 16795,
+      "name": "HashedAccounts",
+      "slow_ops": 12805,
+      "time_lost_ms": 21919.88791,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 10.830471124377729,
+      "faults": 67922,
+      "major_faults": 7838,
+      "name": "AccountsTrie",
+      "slow_ops": 7094,
+      "time_lost_ms": 18919.695143,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 8.129151797531007,
+      "faults": 50981,
+      "major_faults": 10428,
+      "name": "PlainStorageState",
+      "slow_ops": 7306,
+      "time_lost_ms": 16894.317334,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 5.233776298039666,
+      "faults": 32823,
+      "major_faults": 5950,
+      "name": "PlainAccountState",
+      "slow_ops": 4555,
+      "time_lost_ms": 6967.09491,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 6.646862413057414,
+      "faults": 41685,
+      "major_faults": 10598,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 5462,
+      "time_lost_ms": 1614.70276,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 0.2723483507617143,
+      "faults": 1708,
+      "major_faults": 816,
+      "name": "Bytecodes",
+      "slow_ops": 409,
+      "time_lost_ms": 670.68395,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 4.037229445512789,
+      "faults": 25319,
+      "major_faults": 8409,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 2059,
+      "time_lost_ms": 442.254474,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 4.227458709247407,
+      "faults": 26512,
+      "major_faults": 8443,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 1635,
+      "time_lost_ms": 373.910615,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 7.14962257110875,
+      "faults": 44838,
+      "major_faults": 4831,
+      "name": "StoragesHistory",
+      "slow_ops": 1445,
+      "time_lost_ms": 262.171907,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.16918126472961295,
+      "faults": 1061,
+      "major_faults": 493,
+      "name": "HeaderNumbers",
+      "slow_ops": 274,
+      "time_lost_ms": 123.064622,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 3.4059489299005956,
+      "faults": 21360,
+      "major_faults": 985,
+      "name": "AccountsHistory",
+      "slow_ops": 284,
+      "time_lost_ms": 47.27951,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.03061527128000536,
+      "faults": 192,
+      "major_faults": 80,
+      "name": "BlockWithdrawals",
+      "slow_ops": 30,
+      "time_lost_ms": 19.160634,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.1651949012816956,
+      "faults": 1036,
+      "major_faults": 312,
+      "name": "StorageChangeSets",
+      "slow_ops": 81,
+      "time_lost_ms": 14.593375,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.11560453998960356,
+      "faults": 725,
+      "major_faults": 217,
+      "name": "Receipts",
+      "slow_ops": 60,
+      "time_lost_ms": 10.931914,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.05788199726376013,
+      "faults": 363,
+      "major_faults": 105,
+      "name": "AccountChangeSets",
+      "slow_ops": 30,
+      "time_lost_ms": 5.597917,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.0009567272275001675,
+      "faults": 6,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 3,
+      "time_lost_ms": 0.388546,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.005261999751250921,
+      "faults": 33,
+      "major_faults": 2,
+      "name": "BlockBodyIndices",
+      "slow_ops": 1,
+      "time_lost_ms": 0.117489,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.6918732400205377,
+      "faults": 4339,
+      "major_faults": 1073,
+      "name": "TransactionBlocks",
+      "slow_ops": 0,
+      "time_lost_ms": 0.0,
+      "top_op": "CURSOR_GET"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 424036,
+      "percentage": 67.61446444004349,
+      "tid": 3157989
+    },
+    {
+      "faults": 7088,
+      "percentage": 1.130213764753531,
+      "tid": 3786286
+    },
+    {
+      "faults": 6796,
+      "percentage": 1.0836530396818562,
+      "tid": 3835403
+    },
+    {
+      "faults": 2016,
+      "percentage": 0.3214603484400563,
+      "tid": 3157962
+    },
+    {
+      "faults": 1672,
+      "percentage": 0.2666079873967133,
+      "tid": 3157990
+    },
+    {
+      "faults": 1522,
+      "percentage": 0.24268980670920912,
+      "tid": 3157963
+    },
+    {
+      "faults": 1137,
+      "percentage": 0.18129980961128173,
+      "tid": 3786288
+    },
+    {
+      "faults": 1057,
+      "percentage": 0.16854344657794618,
+      "tid": 3786291
+    },
+    {
+      "faults": 1040,
+      "percentage": 0.16583271943336234,
+      "tid": 3786315
+    },
+    {
+      "faults": 1015,
+      "percentage": 0.16184635598544497,
+      "tid": 3835417
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 21,
+      "max_block": 24221419,
+      "min_block": 24221399
+    },
+    "duration_secs": 251.985156594,
+    "file_size_gb": 659.638157328,
+    "total_events": 627138
+  },
+  "transactions": {
+    "aborts": 21579,
+    "commit_latency_avg_us": 180466.602,
+    "commit_latency_p99_us": 311068.71,
+    "commits": 9,
+    "max_concurrent_ro": 259,
+    "max_concurrent_rw": 2,
+    "rate_per_sec": 88.88991426898758,
+    "ro_count": 21773,
+    "rw_count": 10,
+    "total": 21783
+  }
+}
+,
+{
+  "attribution": {
+    "directly_attributed": 658739,
+    "timestamp_fallback": 0,
+    "uncorrelated": 17068
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 34.82961885610658,
+        "name": "HashedStorages",
+        "ops": 1165161,
+        "p95_latency_us": 13.625,
+        "pct": 33.86053537588283
+      },
+      {
+        "avg_latency_us": 30.845034189869192,
+        "name": "HashedAccounts",
+        "ops": 712638,
+        "p95_latency_us": 8.576,
+        "pct": 20.70984542839864
+      },
+      {
+        "avg_latency_us": 64.31661353475415,
+        "name": "StoragesTrie",
+        "ops": 441530,
+        "p95_latency_us": 48.581,
+        "pct": 12.83122434111127
+      },
+      {
+        "avg_latency_us": 51.01094282711508,
+        "name": "AccountsTrie",
+        "ops": 371085,
+        "p95_latency_us": 25.518,
+        "pct": 10.78403479858962
+      },
+      {
+        "avg_latency_us": 7.302890028382903,
+        "name": "AccountsTrieChangeSets",
+        "ops": 164888,
+        "p95_latency_us": 17.934,
+        "pct": 4.791780669846115
+      },
+      {
+        "avg_latency_us": 7.3643419831514985,
+        "name": "StoragesTrieChangeSets",
+        "ops": 144820,
+        "p95_latency_us": 20.639,
+        "pct": 4.208588111973668
+      },
+      {
+        "avg_latency_us": 10.397254134468012,
+        "name": "StoragesHistory",
+        "ops": 93301,
+        "p95_latency_us": 36.017,
+        "pct": 2.7114036696261237
+      },
+      {
+        "avg_latency_us": 210.88667045868476,
+        "name": "PlainStorageState",
+        "ops": 71378,
+        "p95_latency_us": 706.802,
+        "pct": 2.0743032886096984
+      },
+      {
+        "avg_latency_us": 2.467627838628283,
+        "name": "StorageChangeSets",
+        "ops": 69752,
+        "p95_latency_us": 3.076,
+        "pct": 2.027050393498048
+      },
+      {
+        "avg_latency_us": 90.96629026250301,
+        "name": "PlainAccountState",
+        "ops": 62285,
+        "p95_latency_us": 124.493,
+        "pct": 1.8100532423303408
+      },
+      {
+        "avg_latency_us": 8.79277464292012,
+        "name": "AccountsHistory",
+        "ops": 45368,
+        "p95_latency_us": 25.838,
+        "pct": 1.3184313317499061
+      },
+      {
+        "avg_latency_us": 2.4571631129444573,
+        "name": "AccountChangeSets",
+        "ops": 34424,
+        "p95_latency_us": 3.096,
+        "pct": 1.0003897056109763
+      },
+      {
+        "avg_latency_us": 9.977151792828685,
+        "name": "HeaderNumbers",
+        "ops": 17570,
+        "p95_latency_us": 13.415,
+        "pct": 0.5105986267599597
+      },
+      {
+        "avg_latency_us": 2.954392871992872,
+        "name": "StageCheckpoints",
+        "ops": 16835,
+        "p95_latency_us": 4.238,
+        "pct": 0.4892389232500809
+      },
+      {
+        "avg_latency_us": 3.5856554909560723,
+        "name": "Receipts",
+        "ops": 15480,
+        "p95_latency_us": 3.076,
+        "pct": 0.449861510657039
+      }
+    ],
+    "latency_avg_us": 39.840258946446426,
+    "latency_p95_us": 28.814,
+    "latency_p99_us": 533.247,
+    "rate_per_sec": 13887.653132606663,
+    "seek_ratio": 64.12034783477993,
+    "total": 3441059
+  },
+  "label": "trace_block",
+  "page_faults": {
+    "major": 147012,
+    "major_ratio": 0.21753547980414525,
+    "minor": 528795,
+    "random_ratio": 0.8695217266493639,
+    "rate_per_sec": 2682.3592146772685,
+    "sequential_ratio": 0.13047827335063614,
+    "total": 675807,
+    "unique_pages": 338518
+  },
+  "tables": [
+    {
+      "fault_pct": 18.150300307632207,
+      "faults": 122661,
+      "major_faults": 39622,
+      "name": "HashedStorages",
+      "slow_ops": 26109,
+      "time_lost_ms": 35175.603384,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 22.71713669731151,
+      "faults": 153524,
+      "major_faults": 26887,
+      "name": "StoragesTrie",
+      "slow_ops": 15235,
+      "time_lost_ms": 25147.534019,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 8.423706768352503,
+      "faults": 56928,
+      "major_faults": 16799,
+      "name": "HashedAccounts",
+      "slow_ops": 12090,
+      "time_lost_ms": 18910.644288,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 10.294211217107843,
+      "faults": 69569,
+      "major_faults": 7976,
+      "name": "AccountsTrie",
+      "slow_ops": 6928,
+      "time_lost_ms": 16562.569376,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 8.155434909670957,
+      "faults": 55115,
+      "major_faults": 11193,
+      "name": "PlainStorageState",
+      "slow_ops": 7329,
+      "time_lost_ms": 14378.043097,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 4.818239526965539,
+      "faults": 32562,
+      "major_faults": 6140,
+      "name": "PlainAccountState",
+      "slow_ops": 4545,
+      "time_lost_ms": 5048.450699,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 6.931712752309462,
+      "faults": 46845,
+      "major_faults": 11893,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 6171,
+      "time_lost_ms": 1526.218767,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 0.29697827930163495,
+      "faults": 2007,
+      "major_faults": 974,
+      "name": "Bytecodes",
+      "slow_ops": 490,
+      "time_lost_ms": 741.213292,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 3.8761066399134667,
+      "faults": 26195,
+      "major_faults": 7851,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 1322,
+      "time_lost_ms": 308.250057,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.5410997518522302,
+      "faults": 23931,
+      "major_faults": 7041,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 1420,
+      "time_lost_ms": 283.154982,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 6.540772735411146,
+      "faults": 44203,
+      "major_faults": 4122,
+      "name": "StoragesHistory",
+      "slow_ops": 765,
+      "time_lost_ms": 139.093555,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.0895226003873887,
+      "faults": 605,
+      "major_faults": 258,
+      "name": "HeaderNumbers",
+      "slow_ops": 136,
+      "time_lost_ms": 55.381521,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 3.256846999217232,
+      "faults": 22010,
+      "major_faults": 843,
+      "name": "AccountsHistory",
+      "slow_ops": 98,
+      "time_lost_ms": 17.628764,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.1567015434880077,
+      "faults": 1059,
+      "major_faults": 304,
+      "name": "StorageChangeSets",
+      "slow_ops": 57,
+      "time_lost_ms": 12.351922,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.053713560232433226,
+      "faults": 363,
+      "major_faults": 106,
+      "name": "AccountChangeSets",
+      "slow_ops": 30,
+      "time_lost_ms": 9.836595,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.011097843023230006,
+      "faults": 75,
+      "major_faults": 22,
+      "name": "BlockWithdrawals",
+      "slow_ops": 8,
+      "time_lost_ms": 3.619659,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.1510786363562378,
+      "faults": 1021,
+      "major_faults": 346,
+      "name": "Receipts",
+      "slow_ops": 12,
+      "time_lost_ms": 2.934625,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.004143194728672535,
+      "faults": 28,
+      "major_faults": 0,
+      "name": "TransactionBlocks",
+      "slow_ops": 1,
+      "time_lost_ms": 0.37943,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.004735079689911469,
+      "faults": 32,
+      "major_faults": 2,
+      "name": "BlockBodyIndices",
+      "slow_ops": 1,
+      "time_lost_ms": 0.100278,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.0008878274418584004,
+      "faults": 6,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 0,
+      "time_lost_ms": 0.0,
+      "top_op": "CURSOR_PUT"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 457032,
+      "percentage": 67.62759190123808,
+      "tid": 3157989
+    },
+    {
+      "faults": 7446,
+      "percentage": 1.101793855346275,
+      "tid": 4111594
+    },
+    {
+      "faults": 6568,
+      "percentage": 0.9718751063543289,
+      "tid": 4135046
+    },
+    {
+      "faults": 2362,
+      "percentage": 0.3495080696115903,
+      "tid": 3157962
+    },
+    {
+      "faults": 2306,
+      "percentage": 0.3412216801542452,
+      "tid": 3157963
+    },
+    {
+      "faults": 2136,
+      "percentage": 0.31606656930159055,
+      "tid": 3157990
+    },
+    {
+      "faults": 1355,
+      "percentage": 0.20050103061968874,
+      "tid": 4111576
+    },
+    {
+      "faults": 1330,
+      "percentage": 0.19680174961194544,
+      "tid": 4111639
+    },
+    {
+      "faults": 1308,
+      "percentage": 0.1935463823251313,
+      "tid": 4111582
+    },
+    {
+      "faults": 1256,
+      "percentage": 0.18585187782902515,
+      "tid": 4111573
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 21,
+      "max_block": 24221443,
+      "min_block": 24221423
+    },
+    "duration_secs": 251.945002855,
+    "file_size_gb": 659.690078224,
+    "total_events": 675807
+  },
+  "transactions": {
+    "aborts": 21824,
+    "commit_latency_avg_us": 154316.0108888889,
+    "commit_latency_p99_us": 240154.979,
+    "commits": 9,
+    "max_concurrent_ro": 250,
+    "max_concurrent_rw": 1,
+    "rate_per_sec": 90.04886838320553,
+    "ro_count": 22007,
+    "rw_count": 10,
+    "total": 22017
+  }
+}
+,
+{
+  "attribution": {
+    "directly_attributed": 637105,
+    "timestamp_fallback": 0,
+    "uncorrelated": 5193
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 32.325823598604906,
+        "name": "HashedStorages",
+        "ops": 1288805,
+        "p95_latency_us": 7.985,
+        "pct": 34.33149476212319
+      },
+      {
+        "avg_latency_us": 35.50063047729795,
+        "name": "HashedAccounts",
+        "ops": 794598,
+        "p95_latency_us": 8.496,
+        "pct": 21.166690907463558
+      },
+      {
+        "avg_latency_us": 79.59698352325736,
+        "name": "StoragesTrie",
+        "ops": 420168,
+        "p95_latency_us": 54.922,
+        "pct": 11.192535326299772
+      },
+      {
+        "avg_latency_us": 62.90461761569837,
+        "name": "AccountsTrie",
+        "ops": 413597,
+        "p95_latency_us": 26.44,
+        "pct": 11.0174954621761
+      },
+      {
+        "avg_latency_us": 8.320469080043445,
+        "name": "AccountsTrieChangeSets",
+        "ops": 203477,
+        "p95_latency_us": 24.005,
+        "pct": 5.420268822446019
+      },
+      {
+        "avg_latency_us": 8.51381201512587,
+        "name": "StoragesTrieChangeSets",
+        "ops": 158933,
+        "p95_latency_us": 32.491,
+        "pct": 4.2336951338864495
+      },
+      {
+        "avg_latency_us": 11.490003425946478,
+        "name": "StoragesHistory",
+        "ops": 103621,
+        "p95_latency_us": 47.299,
+        "pct": 2.760280894895634
+      },
+      {
+        "avg_latency_us": 2.7271740256891803,
+        "name": "StorageChangeSets",
+        "ops": 72949,
+        "p95_latency_us": 3.106,
+        "pct": 1.943232848570672
+      },
+      {
+        "avg_latency_us": 289.47558921559676,
+        "name": "PlainStorageState",
+        "ops": 65706,
+        "p95_latency_us": 1234.759,
+        "pct": 1.750292088283384
+      },
+      {
+        "avg_latency_us": 117.34996854227732,
+        "name": "PlainAccountState",
+        "ops": 62433,
+        "p95_latency_us": 149.189,
+        "pct": 1.6631051342007808
+      },
+      {
+        "avg_latency_us": 10.270525896784012,
+        "name": "AccountsHistory",
+        "ops": 53887,
+        "p95_latency_us": 31.238,
+        "pct": 1.4354547493581515
+      },
+      {
+        "avg_latency_us": 2.775428905461616,
+        "name": "AccountChangeSets",
+        "ops": 40629,
+        "p95_latency_us": 3.106,
+        "pct": 1.0822849854635135
+      },
+      {
+        "avg_latency_us": 9.245602946916472,
+        "name": "HeaderNumbers",
+        "ops": 20496,
+        "p95_latency_us": 16.23,
+        "pct": 0.5459773329902328
+      },
+      {
+        "avg_latency_us": 3.6752469315895375,
+        "name": "StageCheckpoints",
+        "ops": 19880,
+        "p95_latency_us": 4.618,
+        "pct": 0.5295681781735865
+      },
+      {
+        "avg_latency_us": 3.757062284626858,
+        "name": "Receipts",
+        "ops": 19443,
+        "p95_latency_us": 3.276,
+        "pct": 0.5179272680195696
+      }
+    ],
+    "latency_avg_us": 43.97894640466361,
+    "latency_p95_us": 25.778,
+    "latency_p99_us": 512.89,
+    "rate_per_sec": 14891.457698047368,
+    "seek_ratio": 64.15385500593767,
+    "total": 3754002
+  },
+  "label": "debug_traceTransaction",
+  "page_faults": {
+    "major": 136726,
+    "major_ratio": 0.2128700385179465,
+    "minor": 505572,
+    "random_ratio": 0.8711842029466119,
+    "rate_per_sec": 2542.7802521521785,
+    "sequential_ratio": 0.12881579705338808,
+    "total": 642298,
+    "unique_pages": 325508
+  },
+  "tables": [
+    {
+      "fault_pct": 14.258023534247343,
+      "faults": 91579,
+      "major_faults": 26082,
+      "name": "HashedStorages",
+      "slow_ops": 20068,
+      "time_lost_ms": 36367.019693,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 19.9507082382321,
+      "faults": 128143,
+      "major_faults": 24663,
+      "name": "StoragesTrie",
+      "slow_ops": 15523,
+      "time_lost_ms": 30413.936232,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 8.80339032660852,
+      "faults": 56544,
+      "major_faults": 16155,
+      "name": "HashedAccounts",
+      "slow_ops": 13401,
+      "time_lost_ms": 24894.230117,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 11.362171453126118,
+      "faults": 72979,
+      "major_faults": 7691,
+      "name": "AccountsTrie",
+      "slow_ops": 7599,
+      "time_lost_ms": 23224.427075,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 9.35484774979838,
+      "faults": 60086,
+      "major_faults": 12406,
+      "name": "PlainStorageState",
+      "slow_ops": 7982,
+      "time_lost_ms": 18378.227826,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 5.197587412696287,
+      "faults": 33384,
+      "major_faults": 6068,
+      "name": "PlainAccountState",
+      "slow_ops": 4850,
+      "time_lost_ms": 6695.998039,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 8.68693347947526,
+      "faults": 55796,
+      "major_faults": 14205,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 7408,
+      "time_lost_ms": 2226.749661,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 0.5052172044751813,
+      "faults": 3245,
+      "major_faults": 1596,
+      "name": "Bytecodes",
+      "slow_ops": 834,
+      "time_lost_ms": 1701.805218,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 5.032243600322592,
+      "faults": 32322,
+      "major_faults": 10494,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 2230,
+      "time_lost_ms": 563.231636,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 4.153990826687924,
+      "faults": 26681,
+      "major_faults": 9114,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 2111,
+      "time_lost_ms": 453.446497,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 7.541982070627652,
+      "faults": 48442,
+      "major_faults": 4257,
+      "name": "StoragesHistory",
+      "slow_ops": 1278,
+      "time_lost_ms": 241.114825,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.904262507434244,
+      "faults": 25077,
+      "major_faults": 823,
+      "name": "AccountsHistory",
+      "slow_ops": 265,
+      "time_lost_ms": 62.394821,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.17297267000675698,
+      "faults": 1111,
+      "major_faults": 323,
+      "name": "StorageChangeSets",
+      "slow_ops": 125,
+      "time_lost_ms": 26.906033,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.04047965274685582,
+      "faults": 260,
+      "major_faults": 84,
+      "name": "HeaderNumbers",
+      "slow_ops": 76,
+      "time_lost_ms": 23.301323,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.06663573606020881,
+      "faults": 428,
+      "major_faults": 135,
+      "name": "AccountChangeSets",
+      "slow_ops": 54,
+      "time_lost_ms": 20.888921,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.008563003465681038,
+      "faults": 55,
+      "major_faults": 12,
+      "name": "BlockWithdrawals",
+      "slow_ops": 5,
+      "time_lost_ms": 17.260541,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.0010898368047230413,
+      "faults": 7,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 6,
+      "time_lost_ms": 8.977962,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.1410560207255822,
+      "faults": 906,
+      "major_faults": 264,
+      "name": "Receipts",
+      "slow_ops": 26,
+      "time_lost_ms": 7.265655,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.004359347218892165,
+      "faults": 28,
+      "major_faults": 0,
+      "name": "TransactionBlocks",
+      "slow_ops": 1,
+      "time_lost_ms": 0.120626,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.004359347218892165,
+      "faults": 28,
+      "major_faults": 0,
+      "name": "BlockBodyIndices",
+      "slow_ops": 1,
+      "time_lost_ms": 0.103233,
+      "top_op": "CURSOR_PUT"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 450753,
+      "percentage": 70.178172748475,
+      "tid": 3157989
+    },
+    {
+      "faults": 2150,
+      "percentage": 0.334735590022077,
+      "tid": 3157962
+    },
+    {
+      "faults": 1943,
+      "percentage": 0.3025075587966956,
+      "tid": 3157963
+    },
+    {
+      "faults": 1773,
+      "percentage": 0.27604009353913606,
+      "tid": 228535
+    },
+    {
+      "faults": 1711,
+      "percentage": 0.26638725326873197,
+      "tid": 228539
+    },
+    {
+      "faults": 1700,
+      "percentage": 0.26467465257559575,
+      "tid": 228547
+    },
+    {
+      "faults": 1697,
+      "percentage": 0.2642075796592859,
+      "tid": 228546
+    },
+    {
+      "faults": 1672,
+      "percentage": 0.26031530535670355,
+      "tid": 3157990
+    },
+    {
+      "faults": 1640,
+      "percentage": 0.25533319424939827,
+      "tid": 228531
+    },
+    {
+      "faults": 1600,
+      "percentage": 0.2491055553652666,
+      "tid": 228538
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 21,
+      "max_block": 24221464,
+      "min_block": 24221444
+    },
+    "duration_secs": 252.596739123,
+    "file_size_gb": 659.711402,
+    "total_events": 642298
+  },
+  "transactions": {
+    "aborts": 25526,
+    "commit_latency_avg_us": 140853.11115384614,
+    "commit_latency_p99_us": 295243.352,
+    "commits": 13,
+    "max_concurrent_ro": 776,
+    "max_concurrent_rw": 1,
+    "rate_per_sec": 107.2391930904104,
+    "ro_count": 26236,
+    "rw_count": 13,
+    "total": 26249
+  }
+}
+,
+{
+  "attribution": {
+    "directly_attributed": 640072,
+    "timestamp_fallback": 0,
+    "uncorrelated": 1796
+  },
+  "cursor_ops": {
+    "by_table": [
+      {
+        "avg_latency_us": 5.141316757444392,
+        "name": "AccountsTrieChangeSets",
+        "ops": 2317382,
+        "p95_latency_us": 3.246,
+        "pct": 28.490623310684338
+      },
+      {
+        "avg_latency_us": 5.675131802045804,
+        "name": "StoragesTrieChangeSets",
+        "ops": 1288197,
+        "p95_latency_us": 3.306,
+        "pct": 15.83749915937624
+      },
+      {
+        "avg_latency_us": 43.998935493659204,
+        "name": "HashedStorages",
+        "ops": 988678,
+        "p95_latency_us": 11.291,
+        "pct": 12.15511835060459
+      },
+      {
+        "avg_latency_us": 2.5212028118515244,
+        "name": "FREE_DBI (internal)",
+        "ops": 814410,
+        "p95_latency_us": 2.685,
+        "pct": 10.012612737327913
+      },
+      {
+        "avg_latency_us": 71.55858797849311,
+        "name": "HashedAccounts",
+        "ops": 778355,
+        "p95_latency_us": 34.985,
+        "pct": 9.569341225135824
+      },
+      {
+        "avg_latency_us": 3.7205722399821575,
+        "name": "StorageChangeSets",
+        "ops": 470785,
+        "p95_latency_us": 2.925,
+        "pct": 5.78797888967832
+      },
+      {
+        "avg_latency_us": 71.31257482628908,
+        "name": "AccountsTrie",
+        "ops": 419231,
+        "p95_latency_us": 45.345,
+        "pct": 5.154157795806434
+      },
+      {
+        "avg_latency_us": 3.84827667273773,
+        "name": "AccountChangeSets",
+        "ops": 417280,
+        "p95_latency_us": 2.905,
+        "pct": 5.1301715880603025
+      },
+      {
+        "avg_latency_us": 79.8270228140904,
+        "name": "StoragesTrie",
+        "ops": 330892,
+        "p95_latency_us": 71.163,
+        "pct": 4.068090340098854
+      },
+      {
+        "avg_latency_us": 38.94572420718274,
+        "name": "StoragesHistory",
+        "ops": 97595,
+        "p95_latency_us": 82.845,
+        "pct": 1.1998636314626756
+      },
+      {
+        "avg_latency_us": 27.973696948002427,
+        "name": "AccountsHistory",
+        "ops": 64253,
+        "p95_latency_us": 45.234,
+        "pct": 0.7899465947268947
+      },
+      {
+        "avg_latency_us": 155.0415689085709,
+        "name": "PlainAccountState",
+        "ops": 54195,
+        "p95_latency_us": 225.822,
+        "pct": 0.6662903786784128
+      },
+      {
+        "avg_latency_us": 345.26853649395474,
+        "name": "PlainStorageState",
+        "ops": 47227,
+        "p95_latency_us": 1717.323,
+        "pct": 0.5806235946830041
+      },
+      {
+        "avg_latency_us": 6.325678396980462,
+        "name": "Receipts",
+        "ops": 18016,
+        "p95_latency_us": 3.607,
+        "pct": 0.22149437147837045
+      },
+      {
+        "avg_latency_us": 462.498276471305,
+        "name": "TransactionHashNumbers",
+        "ops": 8207,
+        "p95_latency_us": 2006.704,
+        "pct": 0.10089943976037889
+      }
+    ],
+    "latency_avg_us": 26.45513294051359,
+    "latency_p95_us": 8.637,
+    "latency_p99_us": 173.024,
+    "rate_per_sec": 32002.663924546185,
+    "seek_ratio": 25.559904601036582,
+    "total": 8133841
+  },
+  "label": "metrics",
+  "page_faults": {
+    "major": 154507,
+    "major_ratio": 0.2407146017561243,
+    "minor": 487361,
+    "random_ratio": 0.8688575670660744,
+    "rate_per_sec": 2513.7594805130875,
+    "sequential_ratio": 0.13114243293392555,
+    "total": 641868,
+    "unique_pages": 322357
+  },
+  "tables": [
+    {
+      "fault_pct": 14.856948780746196,
+      "faults": 95362,
+      "major_faults": 34225,
+      "name": "HashedAccounts",
+      "slow_ops": 25584,
+      "time_lost_ms": 52148.596489,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 13.393719580973034,
+      "faults": 85970,
+      "major_faults": 28895,
+      "name": "HashedStorages",
+      "slow_ops": 23142,
+      "time_lost_ms": 39120.265739,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 13.017941383586656,
+      "faults": 83558,
+      "major_faults": 12405,
+      "name": "AccountsTrie",
+      "slow_ops": 11346,
+      "time_lost_ms": 26718.146387,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 14.87097035527554,
+      "faults": 95452,
+      "major_faults": 17372,
+      "name": "StoragesTrie",
+      "slow_ops": 12667,
+      "time_lost_ms": 23722.544994,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 6.809811363083998,
+      "faults": 43710,
+      "major_faults": 9078,
+      "name": "PlainStorageState",
+      "slow_ops": 6735,
+      "time_lost_ms": 15737.312605,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 7.031975421737803,
+      "faults": 45136,
+      "major_faults": 10304,
+      "name": "PlainAccountState",
+      "slow_ops": 6781,
+      "time_lost_ms": 7595.187204,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 4.3421700411922695,
+      "faults": 27871,
+      "major_faults": 8737,
+      "name": "AccountsTrieChangeSets",
+      "slow_ops": 5354,
+      "time_lost_ms": 5987.476144,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 3.6773916132288886,
+      "faults": 23604,
+      "major_faults": 8647,
+      "name": "StoragesTrieChangeSets",
+      "slow_ops": 4720,
+      "time_lost_ms": 3848.959492,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 9.693114472134457,
+      "faults": 62217,
+      "major_faults": 15831,
+      "name": "TransactionHashNumbers",
+      "slow_ops": 8195,
+      "time_lost_ms": 3795.090582,
+      "top_op": "DIRECT_PUT"
+    },
+    {
+      "fault_pct": 6.9430163211127525,
+      "faults": 44565,
+      "major_faults": 5061,
+      "name": "StoragesHistory",
+      "slow_ops": 3016,
+      "time_lost_ms": 2809.697296,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 4.479893062124923,
+      "faults": 28755,
+      "major_faults": 1830,
+      "name": "AccountsHistory",
+      "slow_ops": 1156,
+      "time_lost_ms": 1141.129015,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.14442221765222754,
+      "faults": 927,
+      "major_faults": 292,
+      "name": "StorageChangeSets",
+      "slow_ops": 699,
+      "time_lost_ms": 682.463317,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.061383337384010424,
+      "faults": 394,
+      "major_faults": 116,
+      "name": "AccountChangeSets",
+      "slow_ops": 478,
+      "time_lost_ms": 669.012791,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.21343952339110223,
+      "faults": 1370,
+      "major_faults": 666,
+      "name": "Bytecodes",
+      "slow_ops": 329,
+      "time_lost_ms": 591.438264,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.001402157452934248,
+      "faults": 9,
+      "major_faults": 4,
+      "name": "FREE_DBI (internal)",
+      "slow_ops": 241,
+      "time_lost_ms": 218.229677,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.10781032860338886,
+      "faults": 692,
+      "major_faults": 201,
+      "name": "Receipts",
+      "slow_ops": 97,
+      "time_lost_ms": 54.035014,
+      "top_op": "CURSOR_DEL"
+    },
+    {
+      "fault_pct": 0.05001028248798818,
+      "faults": 321,
+      "major_faults": 119,
+      "name": "HeaderNumbers",
+      "slow_ops": 92,
+      "time_lost_ms": 50.530079,
+      "top_op": "DIRECT_GET"
+    },
+    {
+      "fault_pct": 0.012619417076408233,
+      "faults": 81,
+      "major_faults": 26,
+      "name": "BlockWithdrawals",
+      "slow_ops": 29,
+      "time_lost_ms": 37.614483,
+      "top_op": "CURSOR_GET"
+    },
+    {
+      "fault_pct": 0.0010905669078377486,
+      "faults": 7,
+      "major_faults": 0,
+      "name": "StageCheckpoints",
+      "slow_ops": 6,
+      "time_lost_ms": 14.989751,
+      "top_op": "CURSOR_PUT"
+    },
+    {
+      "fault_pct": 0.006076015629381742,
+      "faults": 39,
+      "major_faults": 6,
+      "name": "BlockBodyIndices",
+      "slow_ops": 8,
+      "time_lost_ms": 8.989435,
+      "top_op": "CURSOR_PUT"
+    }
+  ],
+  "threads": [
+    {
+      "faults": 420793,
+      "percentage": 65.55756012139568,
+      "tid": 3157989
+    },
+    {
+      "faults": 6996,
+      "percentage": 1.0899437267475556,
+      "tid": 3157962
+    },
+    {
+      "faults": 5946,
+      "percentage": 0.9263586905718932,
+      "tid": 3157963
+    },
+    {
+      "faults": 4242,
+      "percentage": 0.6608835461496756,
+      "tid": 290945
+    },
+    {
+      "faults": 2906,
+      "percentage": 0.45274106202521386,
+      "tid": 314981
+    },
+    {
+      "faults": 2783,
+      "percentage": 0.43357824350177915,
+      "tid": 305124
+    },
+    {
+      "faults": 2773,
+      "percentage": 0.43202029077629667,
+      "tid": 314964
+    },
+    {
+      "faults": 2725,
+      "percentage": 0.42454211769398065,
+      "tid": 317250
+    },
+    {
+      "faults": 2716,
+      "percentage": 0.42313996024104644,
+      "tid": 305121
+    },
+    {
+      "faults": 2589,
+      "percentage": 0.40335396062741874,
+      "tid": 310688
+    }
+  ],
+  "trace": {
+    "block_range": {
+      "block_count": 18,
+      "max_block": 24221485,
+      "min_block": 24221468
+    },
+    "duration_secs": 255.341851508,
+    "file_size_gb": 659.745177616,
+    "total_events": 641868
+  },
+  "transactions": {
+    "aborts": 33238,
+    "commit_latency_avg_us": 173.003151274865,
+    "commit_latency_p99_us": 10.57,
+    "commits": 14629,
+    "max_concurrent_ro": 70,
+    "max_concurrent_rw": 1,
+    "rate_per_sec": 199.45717423971593,
+    "ro_count": 47856,
+    "rw_count": 11,
+    "total": 47867
+  }
+}
+];
+
+        const fmt = n => {
+            if (n === null || n === undefined) return '-';
+            if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+            return n.toFixed ? n.toFixed(0) : n;
+        };
+
+        const fmtPct = n => (n * 100).toFixed(1) + '%';
+
+        const fmtDelta = n => {
+            if (n === null || n === undefined) return '-';
+            const prefix = n > 0 ? '+' : '';
+            if (Math.abs(n) >= 1e6) return prefix + (n/1e6).toFixed(1) + 'M';
+            if (Math.abs(n) >= 1e3) return prefix + (n/1e3).toFixed(1) + 'K';
+            return prefix + (n.toFixed ? n.toFixed(0) : n);
+        };
+
+        if (!DATA || !Array.isArray(DATA) || DATA.length === 0) {
+            document.getElementById('content').innerHTML =
+                '<p style="color: #f87171;">No profile data found.</p>';
+        } else {
+
+        // Extract baseline and methods
+        const baseline = DATA.find(d => d.label === 'baseline');
+        const methods = DATA.filter(d => d.label !== 'baseline');
+
+        // Sort methods by delta from baseline (worst first)
+        const sorted = [...methods].sort((a, b) => {
+            const deltaA = baseline ? (a.page_faults.total - baseline.page_faults.total) : a.page_faults.total;
+            const deltaB = baseline ? (b.page_faults.total - baseline.page_faults.total) : b.page_faults.total;
+            return deltaB - deltaA;
+        });
+
+        const maxFaults = sorted[0]?.page_faults?.total || 1;
+        const maxMajor = Math.max(...methods.map(d => d.page_faults.major));
+        const maxRate = Math.max(...methods.map(d => d.page_faults.rate_per_sec));
+        const maxDelta = baseline ? Math.max(...methods.map(d => d.page_faults.total - baseline.page_faults.total)) : maxFaults;
+
+        // Find best/worst
+        const worstMethod = sorted[0]?.label;
+        const bestMethod = sorted[sorted.length - 1]?.label;
+
+        let html = '';
+
+        // Baseline info banner
+        if (baseline) {
+            const bpf = baseline.page_faults;
+            html += `
+            <div class="baseline-banner">
+                <div class="baseline-title">Baseline (Idle)</div>
+                <div class="baseline-stats">
+                    <span>Total: ${fmt(bpf.total)}</span>
+                    <span>Major: ${fmt(bpf.major)}</span>
+                    <span>Rate: ${fmt(bpf.rate_per_sec)}/s</span>
+                </div>
+                <div class="baseline-note">Delta values below show additional load caused by each method</div>
+            </div>`;
+        }
+
+        // Summary cards
+        html += '<div class="summary-grid">';
+        for (const profile of sorted) {
+            const pf = profile.page_faults;
+            const isWorst = profile.label === worstMethod;
+            const isBest = profile.label === bestMethod;
+            const cardClass = isWorst ? 'worst' : (isBest ? 'best' : '');
+
+            // Calculate deltas from baseline
+            const deltaTotal = baseline ? (pf.total - baseline.page_faults.total) : pf.total;
+            const deltaMajor = baseline ? (pf.major - baseline.page_faults.major) : pf.major;
+            const deltaRate = baseline ? (pf.rate_per_sec - baseline.page_faults.rate_per_sec) : pf.rate_per_sec;
+
+            html += `
+            <div class="method-card ${cardClass}">
+                <div class="method-name">${profile.label}</div>
+                <div class="method-stats">
+                    <div class="stat">
+                        <div class="stat-label">Total Faults</div>
+                        <div class="stat-value">${fmt(pf.total)}</div>
+                        ${baseline ? `<div class="stat-delta ${deltaTotal > 0 ? 'delta-bad' : 'delta-good'}">${fmtDelta(deltaTotal)} vs baseline</div>` : ''}
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Major (Disk)</div>
+                        <div class="stat-value ${pf.major_ratio > 0.4 ? 'bad' : ''}">${fmt(pf.major)}</div>
+                        ${baseline ? `<div class="stat-delta ${deltaMajor > 0 ? 'delta-bad' : 'delta-good'}">${fmtDelta(deltaMajor)} vs baseline</div>` : ''}
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Fault Rate</div>
+                        <div class="stat-value">${fmt(pf.rate_per_sec)}/s</div>
+                        ${baseline ? `<div class="stat-delta ${deltaRate > 0 ? 'delta-bad' : 'delta-good'}">${fmtDelta(deltaRate)}/s vs baseline</div>` : ''}
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Major Ratio</div>
+                        <div class="stat-value ${pf.major_ratio > 0.4 ? 'bad' : 'good'}">${fmtPct(pf.major_ratio)}</div>
+                    </div>
+                </div>
+            </div>`;
+        }
+        html += '</div>';
+
+        // Ranking table
+        html += `
+        <div class="section">
+            <div class="section-title">Method Ranking by Page Faults ${baseline ? '(sorted by delta from baseline)' : ''}</div>
+            <table class="ranking-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Method</th>
+                        <th>Total Faults</th>
+                        ${baseline ? '<th>Delta from Baseline</th>' : ''}
+                        <th>Major Faults</th>
+                        <th>Fault Rate</th>
+                        <th>Major Ratio</th>
+                        <th>Unique Pages</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        sorted.forEach((profile, idx) => {
+            const pf = profile.page_faults;
+            const barWidth = (pf.total / maxFaults * 100);
+            const majorBarWidth = (pf.major / maxMajor * 100);
+            const deltaTotal = baseline ? (pf.total - baseline.page_faults.total) : 0;
+            const deltaBarWidth = baseline && maxDelta > 0 ? (Math.abs(deltaTotal) / maxDelta * 100) : 0;
+
+            html += `
+                <tr>
+                    <td class="rank ${idx < 3 ? 'top' : ''}">${idx + 1}</td>
+                    <td class="method">${profile.label}</td>
+                    <td>
+                        <div class="bar-cell">
+                            <div class="bar" style="width: ${barWidth}%; min-width: 4px;"></div>
+                            <span>${fmt(pf.total)}</span>
+                        </div>
+                    </td>
+                    ${baseline ? `
+                    <td>
+                        <div class="bar-cell">
+                            <div class="bar ${deltaTotal > 0 ? 'delta-bar-bad' : 'delta-bar-good'}" style="width: ${deltaBarWidth}%; min-width: 4px;"></div>
+                            <span class="${deltaTotal > 0 ? 'delta-text-bad' : 'delta-text-good'}">${fmtDelta(deltaTotal)}</span>
+                        </div>
+                    </td>` : ''}
+                    <td>
+                        <div class="bar-cell">
+                            <div class="bar major" style="width: ${majorBarWidth}%; min-width: 4px;"></div>
+                            <span>${fmt(pf.major)}</span>
+                        </div>
+                    </td>
+                    <td>${fmt(pf.rate_per_sec)}/s</td>
+                    <td>${fmtPct(pf.major_ratio)}</td>
+                    <td>${fmt(pf.unique_pages)}</td>
+                </tr>`;
+        });
+
+        html += '</tbody></table></div>';
+
+        // Table breakdown - which tables each method hits
+        if (DATA[0]?.tables) {
+            html += `
+            <div class="section table-breakdown">
+                <div class="section-title">Table Access by Method</div>
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th>Table</th>`;
+
+            for (const profile of sorted) {
+                html += `<th>${profile.label}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+
+            // Collect all tables
+            const allTables = new Set();
+            for (const profile of DATA) {
+                for (const t of profile.tables || []) {
+                    allTables.add(t.name);
+                }
+            }
+
+            // Find max for scaling
+            let maxTableFaults = 0;
+            for (const profile of DATA) {
+                for (const t of profile.tables || []) {
+                    if (t.faults > maxTableFaults) maxTableFaults = t.faults;
+                }
+            }
+
+            // Sort tables by total faults across all methods
+            const tableOrder = [...allTables].map(name => {
+                let total = 0;
+                for (const profile of DATA) {
+                    const t = (profile.tables || []).find(x => x.name === name);
+                    if (t) total += t.faults;
+                }
+                return { name, total };
+            }).sort((a, b) => b.total - a.total).slice(0, 20);
+
+            for (const { name } of tableOrder) {
+                html += `<tr><td style="font-family: monospace;">${name}</td>`;
+                for (const profile of sorted) {
+                    const t = (profile.tables || []).find(x => x.name === name);
+                    const faults = t ? t.faults : 0;
+                    const major = t ? t.major_faults : 0;
+                    const barWidth = maxTableFaults > 0 ? (faults / maxTableFaults * 100) : 0;
+                    html += `<td>
+                        <div class="bar-cell">
+                            <div class="bar" style="width: ${barWidth}%; min-width: ${faults > 0 ? 2 : 0}px;"></div>
+                            <span>${fmt(faults)}</span>
+                        </div>
+                    </td>`;
+                }
+                html += '</tr>';
+            }
+
+            html += '</tbody></table></div>';
+        }
+
+        document.getElementById('content').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
